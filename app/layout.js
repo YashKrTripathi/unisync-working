@@ -15,7 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-linear-to-br from-gray-950 via-zinc-900 to-stone-900 text-white">
+      <body suppressHydrationWarning className="bg-linear-to-br from-gray-950 via-zinc-900 to-stone-900 text-white">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
