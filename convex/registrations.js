@@ -154,8 +154,9 @@ export const getEventRegistrations = query({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer
-    if (event.organizerId !== user._id) {
+    // Check if user is the organizer or an admin/superadmin
+    const userRole = user.role || "student";
+    if (event.organizerId !== user._id && !["admin", "superadmin"].includes(userRole)) {
       throw new Error("You are not authorized to view registrations");
     }
 
@@ -188,8 +189,9 @@ export const checkInAttendee = mutation({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer
-    if (event.organizerId !== user._id) {
+    // Check if user is the organizer or an admin/superadmin
+    const userRole = user.role || "student";
+    if (event.organizerId !== user._id && !["admin", "superadmin"].includes(userRole)) {
       throw new Error("You are not authorized to check in attendees");
     }
 

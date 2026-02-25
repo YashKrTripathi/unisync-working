@@ -29,8 +29,14 @@ export const createEvent = mutation({
     try {
       const user = await ctx.runQuery(internal.users.getCurrentUser);
 
+      // Only organisers and above can create events
+      const role = user.role || "student";
+      if (!["organiser", "admin", "superadmin"].includes(role)) {
+        throw new Error("Only organisers can create events. Contact admin to get organiser role.");
+      }
+
       // SERVER-SIDE CHECK: Verify event limit for Free users
-      if (!hasPro && user.freeEventsCreated >= 1) {
+      if (!args.hasPro && user.freeEventsCreated >= 1) {
         throw new Error(
           "Free event limit reached. Please upgrade to Pro to create more events."
         );
@@ -38,14 +44,14 @@ export const createEvent = mutation({
 
       // SERVER-SIDE CHECK: Verify custom color usage
       const defaultColor = "#1e3a8a";
-      if (!hasPro && args.themeColor && args.themeColor !== defaultColor) {
+      if (!args.hasPro && args.themeColor && args.themeColor !== defaultColor) {
         throw new Error(
           "Custom theme colors are a Pro feature. Please upgrade to Pro."
         );
       }
 
       // Force default color for Free users
-      const themeColor = hasPro ? args.themeColor : defaultColor;
+      const themeColor = args.hasPro ? args.themeColor : defaultColor;
 
       // Generate slug from title
       const slug = args.title
@@ -61,6 +67,7 @@ export const createEvent = mutation({
         organizerId: user._id,
         organizerName: user.name,
         registrationCount: 0,
+        status: ["admin", "superadmin"].includes(role) ? "approved" : "pending",
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -116,8 +123,9 @@ export const deleteEvent = mutation({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer
-    if (event.organizerId !== user._id) {
+    // Check if user is the organizer or an admin/superadmin
+    const userRole = user.role || "student";
+    if (event.organizerId !== user._id && !["admin", "superadmin"].includes(userRole)) {
       throw new Error("You are not authorized to delete this event");
     }
 

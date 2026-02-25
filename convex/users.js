@@ -46,6 +46,7 @@ export const store = mutation({
       tokenIdentifier: identity.tokenIdentifier,
       name: identity.name ?? "Anonymous",
       imageUrl: identity.pictureUrl,
+      role: "student",
       hasCompletedOnboarding: false,
       freeEventsCreated: 0,
       createdAt: Date.now(),
@@ -71,7 +72,7 @@ export const getCurrentUser = query({
       .unique();
 
     if (!user) {
-      throw new Error("User not found");
+      return null;
     }
 
     return user;

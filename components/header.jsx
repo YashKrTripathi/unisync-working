@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Building, Crown, Plus, Sparkles, Ticket } from "lucide-react";
 import { SignInButton, useAuth, UserButton, useUser } from "@clerk/nextjs";
 import { Authenticated, Unauthenticated } from "convex/react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { BarLoader } from "react-spinners";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { useOnboarding } from "@/hooks/use-onboarding";
@@ -14,6 +16,34 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import UpgradeModal from "./upgrade-modal";
 import { Badge } from "./ui/badge";
+import { Shield } from "lucide-react";
+
+function AdminLink() {
+  const adminCheck = useQuery(api.admin.isAdmin);
+  if (!adminCheck?.canAccessAdminPanel) return null;
+  return (
+    <Button variant="ghost" size="sm" asChild className="mr-2">
+      <Link href="/admin">
+        <Shield className="w-4 h-4 mr-1" />
+        Admin
+      </Link>
+    </Button>
+  );
+}
+
+function CreateEventButton() {
+  const adminCheck = useQuery(api.admin.isAdmin);
+  // Only show for organiser, admin, superadmin
+  if (!adminCheck?.canCreateEvents) return null;
+  return (
+    <Button size="sm" asChild className="flex gap-2 mr-4">
+      <Link href="/create-event">
+        <Plus className="w-4 h-4" />
+        <span className="hidden sm:inline">Create Event</span>
+      </Link>
+    </Button>
+  );
+}
 
 export default function Header() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -32,14 +62,14 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/spott.png"
-              alt="Spott logo"
+              src="/unisync.png"
+              alt="UniSync logo"
               width={500}
               height={500}
               className="w-full h-11"
               priority
             />
-            {/* <span className="text-purple-500 text-2xl font-bold">spott*</span> */}
+            {/* <span className="text-purple-500 text-2xl font-bold">UniSync</span> */}
             {hasPro && (
               <Badge className="bg-linear-to-r from-pink-500 to-orange-500 gap-1 text-white ml-3">
                 <Crown className="w-3 h-3" />
@@ -70,14 +100,11 @@ export default function Header() {
               <Link href="/explore">Explore</Link>
             </Button>
 
+            <AdminLink />
+
             <Authenticated>
-              {/* Create Event Button */}
-              <Button size="sm" asChild className="flex gap-2 mr-4">
-                <Link href="/create-event">
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Create Event</span>
-                </Link>
-              </Button>
+              {/* Create Event Button — only for organiser/admin/superadmin */}
+              <CreateEventButton />
 
               {/* User Button */}
               <UserButton
@@ -122,10 +149,10 @@ export default function Header() {
             <BarLoader width={"100%"} color="#a855f7" />
           </div>
         )}
-      </nav>
+      </nav >
 
       {/* Onboarding Modal */}
-      <OnboardingModal
+      < OnboardingModal
         isOpen={showOnboarding}
         onClose={handleOnboardingSkip}
         onComplete={handleOnboardingComplete}

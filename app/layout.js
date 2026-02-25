@@ -6,10 +6,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { Toaster } from "sonner";
+import DevRoleSwitcher from "@/components/dev-role-switcher";
 
 export const metadata = {
-  title: "Spott - Delightful Events Start Here",
-  description: "Discover and create amazing events",
+  title: "UniSync - Delightful Events Start Here",
+  description: "Discover and create amazing events with UniSync",
 };
 
 export default function RootLayout({ children }) {
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
                 <Footer />
               </main>
               <Toaster position="top-center" richColors />
+              <DevRoleSwitcher />
             </ConvexClientProvider>
           </ClerkProvider>
         </ThemeProvider>

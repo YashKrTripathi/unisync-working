@@ -8,9 +8,15 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
+import type * as adminAnalytics from "../adminAnalytics.js";
+import type * as adminEvents from "../adminEvents.js";
+import type * as adminRegistrations from "../adminRegistrations.js";
 import type * as dashboard from "../dashboard.js";
+import type * as devSeed from "../devSeed.js";
 import type * as events from "../events.js";
 import type * as explore from "../explore.js";
+import type * as migrations from "../migrations.js";
 import type * as registrations from "../registrations.js";
 import type * as search from "../search.js";
 import type * as seed from "../seed.js";
@@ -31,9 +37,15 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
+  adminAnalytics: typeof adminAnalytics;
+  adminEvents: typeof adminEvents;
+  adminRegistrations: typeof adminRegistrations;
   dashboard: typeof dashboard;
+  devSeed: typeof devSeed;
   events: typeof events;
   explore: typeof explore;
+  migrations: typeof migrations;
   registrations: typeof registrations;
   search: typeof search;
   seed: typeof seed;

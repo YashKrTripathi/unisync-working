@@ -17,6 +17,7 @@ export const getFeaturedEvents = query({
 
     // Sort by registration count for featured
     const featured = events
+      .filter((e) => !e.status || e.status === "approved" || e.status === "live")
       .sort((a, b) => b.registrationCount - a.registrationCount)
       .slice(0, args.limit ?? 3);
 
@@ -51,6 +52,9 @@ export const getEventsByLocation = query({
       );
     }
 
+    // Only show approved/live events
+    events = events.filter((e) => !e.status || e.status === "approved" || e.status === "live");
+
     return events.slice(0, args.limit ?? 4);
   },
 });
@@ -70,6 +74,7 @@ export const getPopularEvents = query({
 
     // Sort by registration count
     const popular = events
+      .filter((e) => !e.status || e.status === "approved" || e.status === "live")
       .sort((a, b) => b.registrationCount - a.registrationCount)
       .slice(0, args.limit ?? 6);
 
@@ -91,7 +96,10 @@ export const getEventsByCategory = query({
       .filter((q) => q.gte(q.field("startDate"), now))
       .collect();
 
-    return events.slice(0, args.limit ?? 12);
+    // Only show approved/live events
+    const filtered = events.filter((e) => !e.status || e.status === "approved" || e.status === "live");
+
+    return filtered.slice(0, args.limit ?? 12);
   },
 });
 

@@ -10,6 +10,15 @@ export default defineSchema({
     name: v.string(),
     imageUrl: v.optional(v.string()),
 
+    // Role-based access (optional for backward compat, defaults to "student")
+    role: v.optional(v.union(
+      v.literal("student"),
+      v.literal("teacher"),
+      v.literal("organiser"),
+      v.literal("admin"),
+      v.literal("superadmin"),
+    )),
+
     // Onboarding
     hasCompletedOnboarding: v.boolean(),
 
@@ -17,19 +26,21 @@ export default defineSchema({
     location: v.optional(
       v.object({
         city: v.string(),
-        state: v.optional(v.string()), // Added state field
+        state: v.optional(v.string()),
         country: v.string(),
       })
     ),
-    interests: v.optional(v.array(v.string())), // Min 3 categories
+    interests: v.optional(v.array(v.string())),
 
     // Organizer tracking (User Subscription)
-    freeEventsCreated: v.number(), // Track free event limit (1 free)
+    freeEventsCreated: v.number(),
 
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_token", ["tokenIdentifier"]), // Primary auth lookup
+  })
+    .index("by_token", ["tokenIdentifier"])
+    .index("by_role", ["role"]),
 
   // Events table
   events: defineTable({
@@ -68,6 +79,18 @@ export default defineSchema({
     coverImage: v.optional(v.string()),
     themeColor: v.optional(v.string()),
 
+    // Event status (optional for backward compat, defaults to "approved")
+    status: v.optional(
+      v.union(
+        v.literal("draft"),
+        v.literal("pending"),
+        v.literal("approved"),
+        v.literal("live"),
+        v.literal("completed"),
+        v.literal("cancelled")
+      )
+    ),
+
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -76,6 +99,7 @@ export default defineSchema({
     .index("by_category", ["category"])
     .index("by_start_date", ["startDate"])
     .index("by_slug", ["slug"])
+    .index("by_status", ["status"])
     .searchIndex("search_title", { searchField: "title" }),
 
   // Registrations/Tickets
@@ -103,4 +127,17 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_event_user", ["eventId", "userId"])
     .index("by_qr_code", ["qrCode"]),
+
+  // Event Audit Log (tracks SuperAdmin edits and approval actions)
+  eventAuditLog: defineTable({
+    eventId: v.id("events"),
+    userId: v.id("users"),
+    userName: v.string(),
+    action: v.string(), // "status_change", "date_edit", "approved", "rejected", "requested_changes"
+    field: v.optional(v.string()),
+    oldValue: v.optional(v.string()),
+    newValue: v.optional(v.string()),
+    reason: v.optional(v.string()),
+    timestamp: v.number(),
+  }).index("by_event", ["eventId"]),
 });
