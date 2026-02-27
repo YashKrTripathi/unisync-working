@@ -93,7 +93,16 @@ export const getEventBySlug = query({
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .unique();
 
-    return event;
+    if (!event) {
+      return null;
+    }
+
+    const organizer = await ctx.db.get(event.organizerId);
+
+    return {
+      ...event,
+      organizerImageUrl: organizer?.imageUrl,
+    };
   },
 });
 

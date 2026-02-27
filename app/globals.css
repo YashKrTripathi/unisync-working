@@ -257,6 +257,96 @@
   animation: gradient-shift 6s ease infinite;
 }
 
+body.is-not-found #app-header,
+body.is-not-found #app-footer {
+  display: none !important;
+}
+
+/* 404 page — glowing pulsing text */
+@keyframes not-found-glow {
+  0%, 100% {
+    text-shadow:
+      0 0 6px rgba(255, 255, 255, 0.5),
+      0 0 20px rgba(139, 92, 246, 0.4),
+      0 0 40px rgba(139, 92, 246, 0.2);
+    opacity: 0.9;
+  }
+  50% {
+    text-shadow:
+      0 0 12px rgba(255, 255, 255, 0.8),
+      0 0 30px rgba(139, 92, 246, 0.7),
+      0 0 60px rgba(139, 92, 246, 0.4);
+    opacity: 1;
+  }
+}
+
+.not-found-glow-text {
+  animation: not-found-glow 3s ease-in-out infinite;
+}
+
+/* 404 button — pulsating color cycle */
+@keyframes not-found-btn-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(139, 92, 246, 0.3),
+      0 0 20px rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: rgba(255, 255, 255, 0.8);
+  }
+  33% {
+    box-shadow:
+      0 0 8px rgba(59, 130, 246, 0.3),
+      0 0 20px rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: rgba(255, 255, 255, 0.9);
+  }
+  66% {
+    box-shadow:
+      0 0 8px rgba(236, 72, 153, 0.3),
+      0 0 20px rgba(236, 72, 153, 0.15);
+    border-color: rgba(236, 72, 153, 0.4);
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.not-found-btn-pulse {
+  animation: not-found-btn-pulse 4s ease-in-out infinite;
+}
+
+/* Hide Spline watermark / "Built with Spline" badge */
+[data-spline-watermark],
+[data-logo],
+div[style*="spline"] > a,
+div[style*="spline"] > div:last-child:not(:first-child),
+canvas + a,
+canvas ~ div a[href*="spline"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Force Spline to fill entire viewport on any device */
+body.is-not-found main > div:first-of-type,
+body.is-not-found main > div:first-of-type > div,
+body.is-not-found main > div:first-of-type > div > div,
+body.is-not-found main > div:first-of-type canvas {
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  position: absolute !important;
+  inset: 0 !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
 .perspective-1000 {
   perspective: 1000px;
 }

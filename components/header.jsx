@@ -180,7 +180,15 @@ function AuthHeader() {
                 </Button>
               )}
               <div className="ml-2 ring-2 ring-primary/20 rounded-full hover:ring-primary/60 transition-all duration-300 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
-                <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-10 h-10" } }}>
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-10 h-10",
+                      userButtonPopoverFooter: "hidden",
+                    },
+                  }}
+                >
                   <UserButton.MenuItems>
                     <UserButton.Link label="My Tickets" labelIcon={<Ticket size={16} />} href="/my-tickets" />
                     <UserButton.Link label="My Events" labelIcon={<Building size={16} />} href="/my-events" />

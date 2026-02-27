@@ -215,7 +215,10 @@ export default function EventDetailPage() {
                 <h2 className="text-2xl font-bold mb-4">Organizer</h2>
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">
-                    <AvatarImage src="" />
+                    <AvatarImage
+                      src={event.organizerImageUrl || undefined}
+                      alt={event.organizerName}
+                    />
                     <AvatarFallback>
                       {event.organizerName.charAt(0).toUpperCase()}
                     </AvatarFallback>

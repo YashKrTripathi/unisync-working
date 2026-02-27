@@ -19,7 +19,7 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-sm text-gray-400 mb-4 max-w-md leading-relaxed">
-              Dr. D. Y. Patil Institute of Technology, Pimpri, Pune — Event Management System for organizing,
+              D. Y. Patil International University, Akurdi, Pune — Event Management System for organizing,
               discovering, and managing campus events seamlessly.
             </p>
             <div className="space-y-2 text-sm text-gray-500">
@@ -102,7 +102,7 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="border-t border-white/5 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
-            © {new Date().getFullYear()} Dr. D. Y. Patil Institute of Technology, Pimpri. All rights reserved.
+            © {new Date().getFullYear()} D. Y. Patil International University, Akurdi, Pune. All rights reserved.
           </p>
           <p className="text-xs text-gray-600">
             Built with ❤️ by DYPIU Tech Team
