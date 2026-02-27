@@ -4,7 +4,7 @@ import { v } from "convex/values";
 
 /**
  * DEV ONLY: Switch the current user's role for testing.
- * This lets you quickly test all features (student, teacher, organiser, admin, superadmin)
+ * This lets you quickly test both roles (student, organiser)
  * without needing multiple Clerk accounts.
  *
  * Usage: Call this mutation from the Convex dashboard or via the DevRoleSwitcher component.
@@ -13,10 +13,7 @@ export const setMyRole = mutation({
     args: {
         role: v.union(
             v.literal("student"),
-            v.literal("teacher"),
-            v.literal("organiser"),
-            v.literal("admin"),
-            v.literal("superadmin")
+            v.literal("organiser")
         ),
     },
     handler: async (ctx, args) => {

@@ -2,36 +2,21 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
-// Get all non-student users (for team management)
+// Get all organiser users (for team management)
 export const getAdminUsers = query({
     handler: async (ctx) => {
         const user = await ctx.runQuery(internal.users.getCurrentUser);
         const role = user?.role || "student";
-        if (!user || (role !== "superadmin" && role !== "admin")) {
-            throw new Error("Unauthorized: Admin access required");
+        if (!user || role !== "organiser") {
+            throw new Error("Unauthorized: Organiser access required");
         }
-
-        const superadmins = await ctx.db
-            .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "superadmin"))
-            .collect();
-
-        const admins = await ctx.db
-            .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "admin"))
-            .collect();
 
         const organisers = await ctx.db
             .query("users")
             .withIndex("by_role", (q) => q.eq("role", "organiser"))
             .collect();
 
-        const teachers = await ctx.db
-            .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "teacher"))
-            .collect();
-
-        return [...superadmins, ...admins, ...organisers, ...teachers];
+        return organisers;
     },
 });
 
@@ -53,34 +38,30 @@ export const isAdmin = query({
         const role = user.role || "student";
         return {
             isStudent: role === "student",
-            isTeacher: role === "teacher",
             isOrganiser: role === "organiser",
-            isAdmin: role === "admin" || role === "superadmin",
-            isSuperAdmin: role === "superadmin",
-            canAccessAdminPanel: role === "admin" || role === "superadmin",
-            canCreateEvents: ["organiser", "admin", "superadmin"].includes(role),
+            isAdmin: role === "organiser", // organiser acts as admin
+            isSuperAdmin: false, // No super admin in simplified system
+            canAccessAdminPanel: role === "organiser",
+            canCreateEvents: role === "organiser",
             role,
             user,
         };
     },
 });
 
-// Set user role (SuperAdmin only)
+// Set user role (Organiser only)
 export const setUserRole = mutation({
     args: {
         userId: v.id("users"),
         role: v.union(
             v.literal("student"),
-            v.literal("teacher"),
             v.literal("organiser"),
-            v.literal("admin"),
-            v.literal("superadmin"),
         ),
     },
     handler: async (ctx, args) => {
         const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
-        if (!currentUser || currentUser.role !== "superadmin") {
-            throw new Error("Unauthorized: Only SuperAdmin can change roles");
+        if (!currentUser || currentUser.role !== "organiser") {
+            throw new Error("Unauthorized: Only Organisers can change roles");
         }
 
         await ctx.db.patch(args.userId, {
@@ -92,44 +73,13 @@ export const setUserRole = mutation({
     },
 });
 
-// Initialize first superadmin by email (one-time setup)
-export const initSuperAdmin = mutation({
-    args: { email: v.string() },
-    handler: async (ctx, args) => {
-        // Check if any superadmin exists
-        const existingSuperAdmins = await ctx.db
-            .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "superadmin"))
-            .collect();
-
-        if (existingSuperAdmins.length > 0) {
-            throw new Error("A SuperAdmin already exists. Use setUserRole instead.");
-        }
-
-        // Find user by email
-        const users = await ctx.db.query("users").collect();
-        const targetUser = users.find((u) => u.email === args.email);
-
-        if (!targetUser) {
-            throw new Error(`User with email ${args.email} not found`);
-        }
-
-        await ctx.db.patch(targetUser._id, {
-            role: "superadmin",
-            updatedAt: Date.now(),
-        });
-
-        return { success: true, userId: targetUser._id };
-    },
-});
-
-// Get aggregated dashboard stats (for admin dashboard)
+// Get aggregated dashboard stats (for organiser dashboard)
 export const getDashboardStats = query({
     handler: async (ctx) => {
         const user = await ctx.runQuery(internal.users.getCurrentUser);
         const role = user?.role || "student";
-        if (!user || (role !== "superadmin" && role !== "admin")) {
-            throw new Error("Unauthorized: Admin access required");
+        if (!user || role !== "organiser") {
+            throw new Error("Unauthorized: Organiser access required");
         }
 
         // Get all events
@@ -141,7 +91,7 @@ export const getDashboardStats = query({
         const now = Date.now();
         const sevenDaysFromNow = now + 7 * 24 * 60 * 60 * 1000;
 
-        // Live/Active events (started but not ended, or starting within 7 days)
+        // Live/Active events
         const liveEvents = allEvents.filter(
             (e) => e.startDate <= now && e.endDate >= now
         );

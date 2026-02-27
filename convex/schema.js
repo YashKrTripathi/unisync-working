@@ -13,10 +13,7 @@ export default defineSchema({
     // Role-based access (optional for backward compat, defaults to "student")
     role: v.optional(v.union(
       v.literal("student"),
-      v.literal("teacher"),
       v.literal("organiser"),
-      v.literal("admin"),
-      v.literal("superadmin"),
     )),
 
     // Onboarding
