@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
     Calendar,
     Users,
     TrendingUp,
     Award,
-    Download,
     FileText,
-    FileSpreadsheet,
+    Sparkles,
     Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -102,44 +102,17 @@ export default function ReportsPage() {
                     </p>
                 </div>
 
-                {/* Export buttons */}
+                {/* Actions */}
                 <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-white/10 text-gray-400 hover:bg-white/5 gap-1"
-                        onClick={() => {
-                            // TODO: Implement PDF export
-                            alert("PDF export coming soon!");
-                        }}
-                    >
-                        <FileText className="w-4 h-4" />
-                        PDF
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-white/10 text-gray-400 hover:bg-white/5 gap-1"
-                        onClick={() => {
-                            // TODO: Implement Excel export
-                            alert("Excel export coming soon!");
-                        }}
-                    >
-                        <FileSpreadsheet className="w-4 h-4" />
-                        Excel
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-white/10 text-gray-400 hover:bg-white/5 gap-1"
-                        onClick={() => {
-                            // TODO: Implement CSV export
-                            alert("CSV export coming soon!");
-                        }}
-                    >
-                        <Download className="w-4 h-4" />
-                        CSV
-                    </Button>
+                    <Link href="/admin/reports/generate">
+                        <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-1.5"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Generate Event Report
+                        </Button>
+                    </Link>
                 </div>
             </div>
 
