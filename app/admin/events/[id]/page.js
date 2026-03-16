@@ -105,12 +105,13 @@ function StatCard({ icon: Icon, label, value, color }) {
 
 export default function EventDetailPage({ params }) {
     const { id } = use(params);
-    const eventData = useQuery(api.adminEvents.getEventWithStats, {
-        eventId: id,
-    });
     const adminCheck = useQuery(api.admin.isAdmin);
+    const isAdmin = adminCheck?.canAccessAdminPanel === true;
+    const eventData = useQuery(api.adminEvents.getEventWithStats, isAdmin ? {
+        eventId: id,
+    } : "skip");
     const updateStatus = useMutation(api.adminEvents.updateEventStatus);
-    const superAdminEdit = useMutation(api.adminEvents.superAdminEditEvent);
+    const adminEdit = useMutation(api.adminEvents.superAdminEditEvent);
 
     const [activeTab, setActiveTab] = useState("details");
     const [isEditing, setIsEditing] = useState(false);
@@ -129,7 +130,7 @@ export default function EventDetailPage({ params }) {
         );
     }
 
-    const isSuperAdmin = adminCheck?.isSuperAdmin;
+    const canEdit = adminCheck?.isAdmin;
 
     const startEditing = () => {
         setEditData({
@@ -146,7 +147,7 @@ export default function EventDetailPage({ params }) {
     const saveEdit = async () => {
         setEditLoading(true);
         try {
-            await superAdminEdit({
+            await adminEdit({
                 eventId: id,
                 startDate: new Date(editData.startDate).getTime(),
                 endDate: new Date(editData.endDate).getTime(),
@@ -226,13 +227,13 @@ export default function EventDetailPage({ params }) {
                     </div>
 
                     <div className="flex gap-2 flex-wrap">
-                        {isSuperAdmin && (
+                        {canEdit && (
                             <button
                                 onClick={startEditing}
                                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-500/20 text-purple-400 text-sm font-medium hover:bg-purple-500/30 transition-colors border border-purple-500/30"
                             >
                                 <Shield className="w-4 h-4" />
-                                <Edit3 className="w-4 h-4" /> SuperAdmin Edit
+                                <Edit3 className="w-4 h-4" /> Admin Edit
                             </button>
                         )}
                         {eventData.effectiveStatus === "pending" && (
@@ -289,7 +290,7 @@ export default function EventDetailPage({ params }) {
                 />
             </div>
 
-            {/* SuperAdmin Edit Modal */}
+            {/* Admin Edit Modal */}
             {isEditing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in-95 m-4">
@@ -297,7 +298,7 @@ export default function EventDetailPage({ params }) {
                             <div className="flex items-center gap-2">
                                 <Shield className="w-5 h-5 text-purple-400" />
                                 <h2 className="text-lg font-bold text-white">
-                                    SuperAdmin Edit
+                                    Admin Edit
                                 </h2>
                             </div>
                             <button

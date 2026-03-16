@@ -2,6 +2,47 @@ import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+/**
+ * Whitelist of fields allowed in the "events" table.
+ * Any transient/client-only keys (e.g. hasPro) are automatically stripped
+ * before insert so they can never cause a schema-validation error.
+ */
+const EVENT_SCHEMA_FIELDS = new Set([
+  "title", "description", "slug",
+  "organizerId", "organizerName",
+  "category", "tags",
+  "startDate", "endDate", "timezone",
+  "locationType", "venue", "address", "city", "state", "country",
+  "capacity", "ticketType", "ticketPrice", "registrationCount",
+  "eventCode",
+  "coverImage", "themeColor",
+  "status",
+  "createdAt", "updatedAt",
+]);
+
+/** Keep only the keys that exist in the events schema. */
+function sanitizeEventData(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([key]) => EVENT_SCHEMA_FIELDS.has(key))
+  );
+}
+
+function generateEventCode(title) {
+  const base = title
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((part) => part.slice(0, 2))
+    .join("");
+
+  const fallback = "EVT";
+  const prefix = (base || fallback).slice(0, 6);
+  const suffix = Date.now().toString().slice(-4);
+  return `${prefix}${suffix}`;
+}
+
 // Create a new event
 export const createEvent = mutation({
   args: {
@@ -27,16 +68,17 @@ export const createEvent = mutation({
   },
   handler: async (ctx, args) => {
     try {
+      const { hasPro = false, ...eventData } = args;
       const user = await ctx.runQuery(internal.users.getCurrentUser);
 
-      // Only organisers and above can create events
+      // Only organisers can create events
       const role = user.role || "student";
-      if (!["organiser", "admin", "superadmin"].includes(role)) {
+      if (role !== "organiser") {
         throw new Error("Only organisers can create events. Contact admin to get organiser role.");
       }
 
       // SERVER-SIDE CHECK: Verify event limit for Free users
-      if (!args.hasPro && user.freeEventsCreated >= 1) {
+      if (!hasPro && user.freeEventsCreated >= 1) {
         throw new Error(
           "Free event limit reached. Please upgrade to Pro to create more events."
         );
@@ -44,14 +86,14 @@ export const createEvent = mutation({
 
       // SERVER-SIDE CHECK: Verify custom color usage
       const defaultColor = "#1e3a8a";
-      if (!args.hasPro && args.themeColor && args.themeColor !== defaultColor) {
+      if (!hasPro && args.themeColor && args.themeColor !== defaultColor) {
         throw new Error(
           "Custom theme colors are a Pro feature. Please upgrade to Pro."
         );
       }
 
       // Force default color for Free users
-      const themeColor = args.hasPro ? args.themeColor : defaultColor;
+      const themeColor = hasPro ? args.themeColor : defaultColor;
 
       // Generate slug from title
       const slug = args.title
@@ -59,23 +101,26 @@ export const createEvent = mutation({
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
-      // Create event
+      // Create event – sanitize to drop any transient client flags
       const eventId = await ctx.db.insert("events", {
-        ...args,
+        ...sanitizeEventData(eventData),
         themeColor, // Use validated color
         slug: `${slug}-${Date.now()}`,
+        eventCode: generateEventCode(args.title),
         organizerId: user._id,
         organizerName: user.name,
         registrationCount: 0,
-        status: ["admin", "superadmin"].includes(role) ? "approved" : "pending",
+        status: role === "organiser" ? "approved" : "pending",
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
 
       // Update user's free event count
-      await ctx.db.patch(user._id, {
-        freeEventsCreated: user.freeEventsCreated + 1,
-      });
+      if (!hasPro) {
+        await ctx.db.patch(user._id, {
+          freeEventsCreated: user.freeEventsCreated + 1,
+        });
+      }
 
       return eventId;
     } catch (error) {
@@ -132,9 +177,9 @@ export const deleteEvent = mutation({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer or an admin/superadmin
+    // Check if user is the organizer or an organiser-admin
     const userRole = user.role || "student";
-    if (event.organizerId !== user._id && !["admin", "superadmin"].includes(userRole)) {
+    if (event.organizerId !== user._id && userRole !== "organiser") {
       throw new Error("You are not authorized to delete this event");
     }
 

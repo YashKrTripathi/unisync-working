@@ -141,7 +141,9 @@ function ChartCard({ title, icon: Icon, children, className = "" }) {
 
 // ─── Aggregated analytics tab ──────────────────────────────────────────────
 function AggregatedAnalytics() {
-    const data = useQuery(api.adminAnalytics.getAggregatedAnalytics);
+    const adminCheck = useQuery(api.admin.isAdmin);
+    const isAdmin = adminCheck?.canAccessAdminPanel === true;
+    const data = useQuery(api.adminAnalytics.getAggregatedAnalytics, isAdmin ? {} : "skip");
 
     if (!data) {
         return (
@@ -321,10 +323,12 @@ function AggregatedAnalytics() {
 // ─── Event-wise analytics tab ───────────────────────────────────────────────
 function EventWiseAnalytics() {
     const [selectedEvent, setSelectedEvent] = useState(null);
-    const eventList = useQuery(api.adminAnalytics.getEventList);
+    const adminCheck = useQuery(api.admin.isAdmin);
+    const isAdmin = adminCheck?.canAccessAdminPanel === true;
+    const eventList = useQuery(api.adminAnalytics.getEventList, isAdmin ? {} : "skip");
     const eventData = useQuery(
         api.adminAnalytics.getEventAnalytics,
-        selectedEvent ? { eventId: selectedEvent } : "skip"
+        isAdmin && selectedEvent ? { eventId: selectedEvent } : "skip"
     );
 
     if (!eventList) {

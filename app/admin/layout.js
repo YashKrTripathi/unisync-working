@@ -48,8 +48,8 @@ function MockAdminLayout({ children }) {
 function AdminLayoutUI({ pathname, collapsed, setCollapsed, adminCheck, children }) {
     return (
         <AdminGuard>
-            <div className="flex min-h-screen bg-[#0c1222] -mt-40 md:-mt-32">
-                <aside className={cn("fixed top-0 left-0 h-screen z-30 bg-[#111827]/95 backdrop-blur-xl border-r border-white/5 flex flex-col transition-all duration-300", collapsed ? "w-16" : "w-60")}>
+            <div className="flex min-h-screen bg-[#0c1222]">
+                <aside className={cn("fixed top-24 left-0 h-[calc(100vh-6rem)] z-30 bg-[#111827]/95 backdrop-blur-xl border-r border-white/5 flex flex-col transition-all duration-300", collapsed ? "w-16" : "w-60")}>
                     <div className="flex items-center justify-between px-4 py-5 border-b border-white/5">
                         {!collapsed && (
                             <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ function AdminLayoutUI({ pathname, collapsed, setCollapsed, adminCheck, children
                     </div>
                 </aside>
 
-                <main className={cn("flex-1 transition-all duration-300 pt-6 pb-12 px-6", collapsed ? "ml-16" : "ml-60")}>
+                <main className={cn("flex-1 transition-all duration-300 pt-2 pb-12 px-4 sm:px-6", collapsed ? "ml-16" : "ml-60")}>
                     {children}
                 </main>
             </div>

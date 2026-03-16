@@ -154,9 +154,9 @@ export const getEventRegistrations = query({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer or an admin/superadmin
+    // Check if user is the organizer or an organiser-admin
     const userRole = user.role || "student";
-    if (event.organizerId !== user._id && !["admin", "superadmin"].includes(userRole)) {
+    if (event.organizerId !== user._id && userRole !== "organiser") {
       throw new Error("You are not authorized to view registrations");
     }
 
@@ -189,9 +189,9 @@ export const checkInAttendee = mutation({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer or an admin/superadmin
+    // Check if user is the organizer or an organiser-admin
     const userRole = user.role || "student";
-    if (event.organizerId !== user._id && !["admin", "superadmin"].includes(userRole)) {
+    if (event.organizerId !== user._id && userRole !== "organiser") {
       throw new Error("You are not authorized to check in attendees");
     }
 
@@ -218,6 +218,72 @@ export const checkInAttendee = mutation({
         checkedIn: true,
         checkedInAt: Date.now(),
       },
+    };
+  },
+});
+
+// Mark current user's attendance using an event code (manual entry or venue QR).
+export const markAttendanceByEventCode = mutation({
+  args: { eventCode: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) {
+      throw new Error("Please sign in to mark attendance");
+    }
+
+    const normalizedCode = args.eventCode.trim().toUpperCase();
+    if (!normalizedCode) {
+      throw new Error("Event code is required");
+    }
+
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_event_code", (q) => q.eq("eventCode", normalizedCode))
+      .unique();
+
+    if (!event) {
+      throw new Error("Invalid event code");
+    }
+
+    if ((event.status || "approved") === "cancelled") {
+      throw new Error("This event has been cancelled");
+    }
+
+    const registration = await ctx.db
+      .query("registrations")
+      .withIndex("by_event_user", (q) =>
+        q.eq("eventId", event._id).eq("userId", user._id)
+      )
+      .unique();
+
+    if (!registration || registration.status !== "confirmed") {
+      throw new Error("You are not registered for this event");
+    }
+
+    if (registration.checkedIn) {
+      return {
+        success: true,
+        alreadyCheckedIn: true,
+        eventId: event._id,
+        eventTitle: event.title,
+        checkedInAt: registration.checkedInAt ?? Date.now(),
+        message: "Attendance already marked",
+      };
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(registration._id, {
+      checkedIn: true,
+      checkedInAt: now,
+    });
+
+    return {
+      success: true,
+      alreadyCheckedIn: false,
+      eventId: event._id,
+      eventTitle: event.title,
+      checkedInAt: now,
+      message: "Attendance marked successfully",
     };
   },
 });

@@ -122,3 +122,43 @@ export const getCategoryCounts = query({
     return counts;
   },
 });
+
+// Get past (completed) events for archive pages.
+export const getPastEvents = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_start_date")
+      .order("desc")
+      .collect();
+
+    const pastEvents = events.filter((event) => {
+      const status = event.status || "approved";
+      const isVisibleStatus =
+        status === "approved" || status === "live" || status === "completed";
+      return isVisibleStatus && event.endDate < now;
+    });
+
+    const sliced = pastEvents.slice(0, args.limit ?? 100);
+    const ids = new Set(sliced.map((e) => e._id));
+    const registrations = await ctx.db.query("registrations").collect();
+
+    const attendanceByEvent = {};
+    for (const registration of registrations) {
+      if (!ids.has(registration.eventId)) continue;
+      if (registration.status !== "confirmed") continue;
+      if (!registration.checkedIn) continue;
+      attendanceByEvent[registration.eventId] =
+        (attendanceByEvent[registration.eventId] || 0) + 1;
+    }
+
+    return sliced.map((event) => ({
+      ...event,
+      attendeeCount: attendanceByEvent[event._id] || 0,
+    }));
+  },
+});

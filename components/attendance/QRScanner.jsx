@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Camera, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Camera, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function QRScanner() {
     const [scanning, setScanning] = useState(false);
@@ -10,6 +12,9 @@ export default function QRScanner() {
     const [error, setError] = useState(null);
     const scannerRef = useRef(null);
     const html5QrCodeRef = useRef(null);
+    const markAttendanceByEventCode = useMutation(
+        api.registrations.markAttendanceByEventCode
+    );
 
     const startScanning = async () => {
         setResult(null);
@@ -31,16 +36,25 @@ export default function QRScanner() {
                     fps: 10,
                     qrbox: { width: 250, height: 250 },
                 },
-                (decodedText) => {
-                    // TODO: Replace with actual API call to verify QR code
-                    // Mock success
-                    setResult({
-                        success: true,
-                        message: "Attendance marked successfully!",
-                        eventName: "TechFusion 2026",
-                        eventCode: decodedText,
-                    });
-                    stopScanning();
+                async (decodedText) => {
+                    try {
+                        const response = await markAttendanceByEventCode({
+                            eventCode: decodedText,
+                        });
+                        setResult({
+                            success: true,
+                            message: response.message,
+                            eventName: response.eventTitle,
+                            eventCode: decodedText,
+                        });
+                    } catch (scanError) {
+                        setResult({
+                            success: false,
+                            message: scanError.message || "Invalid event QR code.",
+                        });
+                    } finally {
+                        stopScanning();
+                    }
                 },
                 () => {
                     // Ignore scan failures (continuous scanning)

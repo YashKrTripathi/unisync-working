@@ -65,7 +65,9 @@ function StatCard({ label, value, icon: Icon, color }) {
 }
 
 export default function RegistrationsAdminPage() {
-    const data = useQuery(api.adminRegistrations.getAllRegistrations);
+    const adminCheck = useQuery(api.admin.isAdmin);
+    const isAdmin = adminCheck?.canAccessAdminPanel === true;
+    const data = useQuery(api.adminRegistrations.getAllRegistrations, isAdmin ? {} : "skip");
     const cancelMutation = useMutation(api.adminRegistrations.adminCancelRegistration);
     const checkInMutation = useMutation(api.adminRegistrations.adminCheckIn);
 

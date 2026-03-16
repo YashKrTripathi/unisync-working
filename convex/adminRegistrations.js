@@ -6,8 +6,8 @@ import { v } from "convex/values";
 async function requireAdmin(ctx) {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
     const role = user?.role || "student";
-    if (!user || (role !== "superadmin" && role !== "admin")) {
-        throw new Error("Unauthorized: Admin access required");
+    if (!user || role !== "organiser") {
+        return null;
     }
     return { user, role };
 }
@@ -15,7 +15,8 @@ async function requireAdmin(ctx) {
 // ─── Get all registrations with joined event data ───────────────────────────
 export const getAllRegistrations = query({
     handler: async (ctx) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return { registrations: [], stats: { total: 0, confirmed: 0, cancelled: 0, checkedIn: 0 } };
 
         const registrations = await ctx.db
             .query("registrations")
@@ -62,7 +63,8 @@ export const getAllRegistrations = query({
 export const adminCancelRegistration = mutation({
     args: { registrationId: v.id("registrations") },
     handler: async (ctx, args) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) throw new Error("Unauthorized");
 
         const registration = await ctx.db.get(args.registrationId);
         if (!registration) throw new Error("Registration not found");
@@ -87,7 +89,8 @@ export const adminCancelRegistration = mutation({
 export const adminCheckIn = mutation({
     args: { registrationId: v.id("registrations") },
     handler: async (ctx, args) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) throw new Error("Unauthorized");
 
         const registration = await ctx.db.get(args.registrationId);
         if (!registration) throw new Error("Registration not found");

@@ -6,12 +6,14 @@ import { ArrowRight, Calendar, MapPin, Users, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockUpcomingEvents } from "@/lib/mockData";
 import { getCategoryIcon, getCategoryLabel } from "@/lib/data";
+import { useConvexQuery } from "@/hooks/use-convex-query";
+import { api } from "@/convex/_generated/api";
 
 export default function UpcomingEvents() {
-    // Show first 4 upcoming events
-    const events = mockUpcomingEvents.slice(0, 4);
+    const { data: events = [] } = useConvexQuery(api.explore.getPopularEvents, {
+        limit: 4,
+    });
 
     return (
         <section className="py-24 relative overflow-hidden">
@@ -24,7 +26,7 @@ export default function UpcomingEvents() {
                     <div>
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold tracking-widest uppercase mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
                             <Sparkles className="w-3.5 h-3.5" />
-                            Don't Miss Out
+                            Don&apos;t Miss Out
                         </div>
                         <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-2 tracking-tighter">
                             Upcoming <span className="text-primary drop-shadow-[0_0_15px_rgba(37,99,235,0.3)]">Events</span>

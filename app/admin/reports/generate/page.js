@@ -54,10 +54,12 @@ export default function GenerateReportPage() {
     const [feedbackImprove, setFeedbackImprove] = useState("");
 
     // ── Convex queries ──────────────────────────────────────────────────
-    const events = useQuery(api.eventReport.getEventsForReportSelector);
+    const adminCheck = useQuery(api.admin.isAdmin);
+    const isAdmin = adminCheck?.canAccessAdminPanel === true;
+    const events = useQuery(api.eventReport.getEventsForReportSelector, isAdmin ? {} : "skip");
     const reportData = useQuery(
         api.eventReport.getEventReportData,
-        selectedEventId ? { eventId: selectedEventId } : "skip"
+        isAdmin && selectedEventId ? { eventId: selectedEventId } : "skip"
     );
 
     // ── Derived ─────────────────────────────────────────────────────────

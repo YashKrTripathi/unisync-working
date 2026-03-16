@@ -6,8 +6,8 @@ import { v } from "convex/values";
 async function requireAdmin(ctx) {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
     const role = user?.role || "student";
-    if (!user || (role !== "superadmin" && role !== "admin")) {
-        throw new Error("Unauthorized: Admin access required");
+    if (!user || role !== "organiser") {
+        return null;
     }
     return { user, role };
 }
@@ -16,7 +16,8 @@ async function requireAdmin(ctx) {
 export const getEventReportData = query({
     args: { eventId: v.id("events") },
     handler: async (ctx, args) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return null;
 
         const event = await ctx.db.get(args.eventId);
         if (!event) throw new Error("Event not found");
@@ -133,7 +134,8 @@ export const getEventReportData = query({
 // ─── Get all events for report selector dropdown ────────────────────────────
 export const getEventsForReportSelector = query({
     handler: async (ctx) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return [];
 
         const events = await ctx.db.query("events").order("desc").collect();
 

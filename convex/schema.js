@@ -71,6 +71,7 @@ export default defineSchema({
     ticketType: v.union(v.literal("free"), v.literal("paid")),
     ticketPrice: v.optional(v.number()), // Paid at event offline
     registrationCount: v.number(),
+    eventCode: v.optional(v.string()),
 
     // Customization
     coverImage: v.optional(v.string()),
@@ -96,6 +97,7 @@ export default defineSchema({
     .index("by_category", ["category"])
     .index("by_start_date", ["startDate"])
     .index("by_slug", ["slug"])
+    .index("by_event_code", ["eventCode"])
     .index("by_status", ["status"])
     .searchIndex("search_title", { searchField: "title" }),
 

@@ -22,18 +22,14 @@ function StatCard({ title, value, subtitle, icon: Icon, color }) {
     };
 
     return (
-        <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-xl p-5">
+        <div className="bg-gray-900/65 backdrop-blur-sm border border-gray-800/90 rounded-xl p-5 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between">
                 <div>
                     <p className="text-sm text-gray-400 mb-1">{title}</p>
-                    <p className="text-2xl font-bold text-white">{value}</p>
-                    {subtitle && (
-                        <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-                    )}
+                    <p className="text-3xl leading-none font-bold text-white">{value}</p>
+                    {subtitle && <p className="text-xs text-gray-500 mt-2">{subtitle}</p>}
                 </div>
-                <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center border ${colorClasses[color]}`}
-                >
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${colorClasses[color]}`}>
                     <Icon className="w-5 h-5" />
                 </div>
             </div>
@@ -48,9 +44,7 @@ function EventCard({ event, isLive }) {
     return (
         <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-white text-sm truncate flex-1">
-                    {event.title}
-                </h3>
+                <h3 className="font-medium text-white text-sm truncate flex-1">{event.title}</h3>
                 {isLive ? (
                     <span className="flex items-center gap-1 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
                         <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
@@ -64,15 +58,9 @@ function EventCard({ event, isLive }) {
             </div>
             <div className="flex items-center gap-4 text-xs text-gray-400">
                 <span>
-                    {startDate.toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                    })}
+                    {startDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                     {" - "}
-                    {endDate.toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                    })}
+                    {endDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                 </span>
                 <span className="flex items-center gap-1">
                     <Users className="w-3 h-3" />
@@ -84,7 +72,9 @@ function EventCard({ event, isLive }) {
 }
 
 export default function AdminDashboard() {
-    const stats = useQuery(api.admin.getDashboardStats);
+    const adminCheck = useQuery(api.admin.isAdmin);
+    const isAdmin = adminCheck?.canAccessAdminPanel === true;
+    const stats = useQuery(api.admin.getDashboardStats, isAdmin ? {} : "skip");
 
     if (stats === undefined) {
         return (
@@ -95,16 +85,12 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div>
-            {/* Header */}
+        <div className="max-w-7xl mx-auto">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-                <p className="text-gray-400 text-sm mt-1">
-                    Overview of your platform activity
-                </p>
+                <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
+                <p className="text-gray-400 text-sm mt-2">Overview of your platform activity</p>
             </div>
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <StatCard
                     title="Live Events"
@@ -122,8 +108,8 @@ export default function AdminDashboard() {
                 />
                 <StatCard
                     title="Total Revenue"
-                    value={`₹${stats.totalRevenue.toLocaleString()}`}
-                    subtitle={`₹${stats.monthlyRevenue.toLocaleString()} this month`}
+                    value={`Rs ${stats.totalRevenue.toLocaleString()}`}
+                    subtitle={`Rs ${stats.monthlyRevenue.toLocaleString()} this month`}
                     icon={DollarSign}
                     color="orange"
                 />
@@ -136,9 +122,7 @@ export default function AdminDashboard() {
                 />
             </div>
 
-            {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Live / Active Events */}
                 <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-xl p-5">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -156,79 +140,85 @@ export default function AdminDashboard() {
                         {stats.upcomingEvents.map((event) => (
                             <EventCard key={event._id} event={event} isLive={false} />
                         ))}
-                        {stats.liveEvents.length === 0 &&
-                            stats.upcomingEvents.length === 0 && (
-                                <p className="text-gray-500 text-sm text-center py-8">
-                                    No live or upcoming events
-                                </p>
-                            )}
+                        {stats.liveEvents.length === 0 && stats.upcomingEvents.length === 0 && (
+                            <p className="text-gray-500 text-sm text-center py-8">No live or upcoming events</p>
+                        )}
                     </div>
                 </div>
 
-                {/* Server Health Placeholder */}
                 <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-xl p-5">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-purple-400" />
-                            Platform Health
+                            Platform Snapshot
                         </h2>
                     </div>
                     <div className="space-y-4">
-                        {/* Simulated health metrics */}
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-400">System Status</span>
-                            <span className="flex items-center gap-2 text-sm text-green-400">
-                                <span className="w-2 h-2 bg-green-400 rounded-full" />
-                                Operational
-                            </span>
+                            <span className="text-sm text-gray-400">Live Events</span>
+                            <span className="text-sm text-white">{stats.liveEvents.length}</span>
                         </div>
+
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-400">Active Users</span>
-                                <span className="text-white">
-                                    {stats.totalRegistrations > 0
-                                        ? Math.min(
-                                            Math.floor(Math.random() * 50) + 10,
-                                            stats.totalRegistrations
-                                        )
-                                        : 0}
-                                </span>
+                                <span className="text-gray-400">Upcoming This Week</span>
+                                <span className="text-white">{stats.upcomingEvents.length}</span>
                             </div>
                             <div className="w-full bg-gray-800 rounded-full h-2">
                                 <div
                                     className="bg-green-500 h-2 rounded-full"
-                                    style={{ width: "45%" }}
+                                    style={{
+                                        width: `${Math.min(
+                                            100,
+                                            Math.round(
+                                                ((stats.liveEvents.length + stats.upcomingEvents.length) /
+                                                    Math.max(stats.totalEvents, 1)) *
+                                                100
+                                            )
+                                        )}%`,
+                                    }}
                                 />
                             </div>
                         </div>
+
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-400">API Response</span>
-                                <span className="text-white">42ms avg</span>
+                                <span className="text-gray-400">Check-in Completion</span>
+                                <span className="text-white">{stats.attendanceRate}%</span>
                             </div>
                             <div className="w-full bg-gray-800 rounded-full h-2">
                                 <div
                                     className="bg-purple-500 h-2 rounded-full"
-                                    style={{ width: "25%" }}
+                                    style={{ width: `${stats.attendanceRate}%` }}
                                 />
                             </div>
                         </div>
+
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-400">Error Rate</span>
-                                <span className="text-white">0.02%</span>
+                                <span className="text-gray-400">Revenue / Checked-in User</span>
+                                <span className="text-white">
+                                    {`Rs ${Math.round(
+                                        stats.totalRevenue / Math.max(stats.totalCheckedIn, 1)
+                                    ).toLocaleString()}`}
+                                </span>
                             </div>
                             <div className="w-full bg-gray-800 rounded-full h-2">
                                 <div
                                     className="bg-orange-500 h-2 rounded-full"
-                                    style={{ width: "2%" }}
+                                    style={{
+                                        width: `${Math.min(
+                                            100,
+                                            Math.round(
+                                                (Math.min(stats.totalRevenue, stats.totalCheckedIn * 500) /
+                                                    Math.max(stats.totalCheckedIn * 500, 1)) *
+                                                100
+                                            )
+                                        )}%`,
+                                    }}
                                 />
                             </div>
                         </div>
-                        <p className="text-xs text-gray-600 mt-2">
-                            * Server metrics are placeholder — integrate real monitoring for
-                            production.
-                        </p>
                     </div>
                 </div>
             </div>

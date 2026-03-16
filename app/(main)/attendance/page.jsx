@@ -6,24 +6,28 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import QRScanner from "@/components/attendance/QRScanner";
 import ManualEntry from "@/components/attendance/ManualEntry";
-import { mockAttendanceRecords, mockUpcomingEvents, mockPastEvents } from "@/lib/mockData";
 import { getCategoryIcon } from "@/lib/data";
+import { useConvexQuery } from "@/hooks/use-convex-query";
+import { api } from "@/convex/_generated/api";
 
 const tabs = [
     { id: "scan", label: "Scan QR", icon: QrCode },
     { id: "manual", label: "Enter Code", icon: Hash },
 ];
 
-// Build a map of events for quick lookup
-const allEvents = [...mockUpcomingEvents, ...mockPastEvents];
-
 export default function AttendancePage() {
     const [activeTab, setActiveTab] = useState("scan");
-
-    // Mock: student's registered events
-    const myAttendance = mockAttendanceRecords.filter(
-        (r) => r.studentId === "stu_001"
+    const { data: registrations = [] } = useConvexQuery(
+        api.registrations.getMyRegistrations
     );
+
+    const myAttendance = registrations
+        .filter((registration) => registration.status === "confirmed")
+        .map((registration) => ({
+            _id: registration._id,
+            attendanceStatus: registration.checkedIn ? "attended" : "registered",
+            event: registration.event,
+        }));
 
     return (
         <div className="pb-20 max-w-4xl mx-auto">
@@ -68,7 +72,7 @@ export default function AttendancePage() {
                 {myAttendance.length > 0 ? (
                     <div className="space-y-3">
                         {myAttendance.map((record) => {
-                            const event = allEvents.find((e) => e._id === record.eventId);
+                            const event = record.event;
                             if (!event) return null;
 
                             const statusColor =

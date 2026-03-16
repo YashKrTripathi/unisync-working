@@ -3,11 +3,16 @@
 import React, { useState } from "react";
 import { Hash, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function ManualEntry() {
     const [eventCode, setEventCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
+    const markAttendanceByEventCode = useMutation(
+        api.registrations.markAttendanceByEventCode
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -16,28 +21,19 @@ export default function ManualEntry() {
         setLoading(true);
         setResult(null);
 
-        // TODO: Replace with actual API call to verify event code
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-
-        // Mock response based on event code
-        const validCodes = ["TF2026", "CF2026", "AIML26", "CRKT26", "SPD26", "ROBO26"];
-
-        if (validCodes.includes(eventCode.toUpperCase())) {
+        try {
+            const response = await markAttendanceByEventCode({
+                eventCode: eventCode.toUpperCase(),
+            });
             setResult({
                 success: true,
-                message: "Attendance marked successfully!",
-                eventName:
-                    eventCode.toUpperCase() === "TF2026"
-                        ? "TechFusion 2026"
-                        : eventCode.toUpperCase() === "CF2026"
-                            ? "Cultural Fiesta"
-                            : "Event Found",
+                message: response.message,
+                eventName: response.eventTitle,
             });
-        } else {
+        } catch (error) {
             setResult({
                 success: false,
-                message: "Invalid event code. Please check and try again.",
+                message: error.message || "Unable to mark attendance.",
             });
         }
 

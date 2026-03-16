@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { format } from "date-fns";
 import {
     Calendar,
@@ -15,8 +16,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockPastEvents, eventCategories } from "@/lib/mockData";
+import { CATEGORIES } from "@/lib/data";
 import { getCategoryIcon, getCategoryLabel } from "@/lib/data";
+import { useConvexQuery } from "@/hooks/use-convex-query";
+import { api } from "@/convex/_generated/api";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -33,9 +36,18 @@ export default function PastEventsPage() {
     const [sortBy, setSortBy] = useState("newest");
     const [currentPage, setCurrentPage] = useState(1);
 
+    const { data: pastEvents = [] } = useConvexQuery(api.explore.getPastEvents, {
+        limit: 300,
+    });
+
+    const eventCategories = useMemo(
+        () => [{ value: "all", label: "All Categories" }, ...CATEGORIES.map((cat) => ({ value: cat.id, label: cat.label }))],
+        []
+    );
+
     // Filter and sort events
     const filteredEvents = useMemo(() => {
-        let events = [...mockPastEvents];
+        let events = [...pastEvents];
 
         // Search filter
         if (searchQuery) {
@@ -69,7 +81,7 @@ export default function PastEventsPage() {
         }
 
         return events;
-    }, [searchQuery, selectedCategory, sortBy]);
+    }, [pastEvents, searchQuery, selectedCategory, sortBy]);
 
     // Pagination
     const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
@@ -228,13 +240,15 @@ export default function PastEventsPage() {
                                         </div>
                                     </div>
 
-                                    <Button
-                                        variant="outline"
-                                        className="w-full rounded-xl py-6 font-bold border-white/10 text-foreground glass-light hover:bg-dypiu-gold hover:text-dypiu-navy hover:border-transparent gap-2 transition-all duration-300 group/btn"
-                                    >
-                                        <Eye className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
-                                        View Memories
-                                    </Button>
+                                    <Link href={`/events/${event.slug}`}>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full rounded-xl py-6 font-bold border-white/10 text-foreground glass-light hover:bg-dypiu-gold hover:text-dypiu-navy hover:border-transparent gap-2 transition-all duration-300 group/btn"
+                                        >
+                                            <Eye className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+                                            View Memories
+                                        </Button>
+                                    </Link>
                                 </div>
                             </div>
                         ))}
@@ -246,7 +260,7 @@ export default function PastEventsPage() {
                         </div>
                         <h3 className="text-2xl font-bold text-foreground mb-3">No events found</h3>
                         <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-                            We couldn't find any past events matching your current filters.
+                            We couldn&apos;t find any past events matching your current filters.
                         </p>
                         <Button
                             variant="outline"

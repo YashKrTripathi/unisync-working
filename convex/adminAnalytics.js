@@ -6,8 +6,8 @@ import { v } from "convex/values";
 async function requireAdmin(ctx) {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
     const role = user?.role || "student";
-    if (!user || (role !== "superadmin" && role !== "admin")) {
-        throw new Error("Unauthorized: Admin access required");
+    if (!user || role !== "organiser") {
+        return null;
     }
     return { user, role };
 }
@@ -15,7 +15,8 @@ async function requireAdmin(ctx) {
 // ─── Simple event list for dropdown ─────────────────────────────────────────
 export const getEventList = query({
     handler: async (ctx) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return [];
         const events = await ctx.db.query("events").order("desc").collect();
         return events.map((e) => ({
             _id: e._id,
@@ -30,7 +31,8 @@ export const getEventList = query({
 // ─── Aggregated platform-wide analytics ─────────────────────────────────────
 export const getAggregatedAnalytics = query({
     handler: async (ctx) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return null;
 
         const allEvents = await ctx.db.query("events").collect();
         const allRegistrations = await ctx.db.query("registrations").collect();
@@ -205,7 +207,8 @@ export const getAggregatedAnalytics = query({
 export const getEventAnalytics = query({
     args: { eventId: v.id("events") },
     handler: async (ctx, args) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return null;
 
         const event = await ctx.db.get(args.eventId);
         if (!event) throw new Error("Event not found");
@@ -309,6 +312,182 @@ export const getEventAnalytics = query({
             peakDay,
             peakCount,
             avgDailyRate,
+        };
+    },
+});
+
+// Dashboard-ready analytics for the admin reports screen.
+export const getReportsOverview = query({
+    args: {
+        range: v.optional(
+            v.union(
+                v.literal("1month"),
+                v.literal("3months"),
+                v.literal("6months"),
+                v.literal("1year")
+            )
+        ),
+        category: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const auth = await requireAdmin(ctx);
+        if (!auth) return null;
+
+        const rangeToMonths = {
+            "1month": 1,
+            "3months": 3,
+            "6months": 6,
+            "1year": 12,
+        };
+        const selectedRange = args.range || "6months";
+        const months = rangeToMonths[selectedRange] || 6;
+
+        const now = Date.now();
+        const rangeStart = new Date(
+            new Date().getFullYear(),
+            new Date().getMonth() - months + 1,
+            1
+        ).getTime();
+
+        const allEvents = await ctx.db.query("events").collect();
+        const eligibleEvents = allEvents.filter((event) => {
+            const status = event.status || "approved";
+            if (status === "cancelled" || status === "draft" || status === "pending") {
+                return false;
+            }
+            if (event.startDate < rangeStart || event.startDate > now) {
+                return false;
+            }
+            if (args.category && args.category !== "all" && event.category !== args.category) {
+                return false;
+            }
+            return true;
+        });
+
+        const ids = new Set(eligibleEvents.map((event) => event._id));
+        const allRegistrations = await ctx.db.query("registrations").collect();
+        const registrations = allRegistrations.filter(
+            (registration) =>
+                ids.has(registration.eventId) && registration.status === "confirmed"
+        );
+
+        const byEvent = {};
+        for (const registration of registrations) {
+            if (!byEvent[registration.eventId]) {
+                byEvent[registration.eventId] = { registered: 0, attended: 0 };
+            }
+            byEvent[registration.eventId].registered += 1;
+            if (registration.checkedIn) {
+                byEvent[registration.eventId].attended += 1;
+            }
+        }
+
+        const totalEvents = eligibleEvents.length;
+        const totalRegistrations = registrations.length;
+        const totalAttendees = registrations.filter((r) => r.checkedIn).length;
+        const attendanceRate =
+            totalRegistrations > 0
+                ? Math.round((totalAttendees / totalRegistrations) * 100)
+                : 0;
+        const averageAttendance =
+            totalEvents > 0 ? Math.round(totalAttendees / totalEvents) : 0;
+
+        let totalHoursOfEvents = 0;
+        for (const event of eligibleEvents) {
+            totalHoursOfEvents += Math.max(0, event.endDate - event.startDate) / (1000 * 60 * 60);
+        }
+        totalHoursOfEvents = Math.round(totalHoursOfEvents * 10) / 10;
+
+        let mostPopularEvent = "N/A";
+        let mostPopularCategory = "N/A";
+        let bestAttendance = -1;
+        const categoryCounts = {};
+
+        const eventWiseParticipation = eligibleEvents
+            .sort((a, b) => b.startDate - a.startDate)
+            .slice(0, 8)
+            .map((event) => {
+                const stats = byEvent[event._id] || { registered: 0, attended: 0 };
+                if (stats.attended > bestAttendance) {
+                    bestAttendance = stats.attended;
+                    mostPopularEvent = event.title;
+                }
+                categoryCounts[event.category] = (categoryCounts[event.category] || 0) + 1;
+
+                return {
+                    event: event.title.length > 24 ? `${event.title.slice(0, 24)}...` : event.title,
+                    registered: stats.registered,
+                    attended: stats.attended,
+                };
+            });
+
+        Object.entries(categoryCounts).forEach(([name, count]) => {
+            if (count > (categoryCounts[mostPopularCategory] || 0)) {
+                mostPopularCategory = name;
+            }
+        });
+
+        const colorMap = {
+            tech: "#3b82f6",
+            music: "#a855f7",
+            sports: "#f59e0b",
+            art: "#ec4899",
+            food: "#22c55e",
+            business: "#06b6d4",
+            health: "#ef4444",
+            education: "#8b5cf6",
+            gaming: "#14b8a6",
+            networking: "#f97316",
+            outdoor: "#84cc16",
+            community: "#6366f1",
+        };
+
+        const categoryDistribution = Object.entries(categoryCounts).map(([name, value]) => ({
+            name,
+            value,
+            fill: colorMap[name] || "#64748b",
+        }));
+
+        const attendanceOverTime = [];
+        for (let i = months - 1; i >= 0; i--) {
+            const monthStart = new Date(
+                new Date().getFullYear(),
+                new Date().getMonth() - i,
+                1
+            ).getTime();
+            const monthEnd = new Date(
+                new Date().getFullYear(),
+                new Date().getMonth() - i + 1,
+                1
+            ).getTime();
+
+            const attendeesInMonth = registrations.filter(
+                (registration) =>
+                    registration.checkedIn &&
+                    registration.checkedInAt &&
+                    registration.checkedInAt >= monthStart &&
+                    registration.checkedInAt < monthEnd
+            ).length;
+
+            attendanceOverTime.push({
+                month: new Date(monthStart).toLocaleDateString("en-US", { month: "short" }),
+                attendees: attendeesInMonth,
+            });
+        }
+
+        return {
+            attendanceOverTime,
+            eventWiseParticipation,
+            categoryDistribution,
+            reportSummary: {
+                totalEvents,
+                totalAttendees,
+                averageAttendance,
+                attendanceRate,
+                mostPopularEvent,
+                mostPopularCategory,
+                totalHoursOfEvents,
+            },
         };
     },
 });

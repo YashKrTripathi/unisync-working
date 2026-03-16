@@ -122,13 +122,15 @@ export default function EventsAdminPage() {
         }, 300);
     };
 
-    const events = useQuery(api.adminEvents.getAllEvents, {
+    const adminCheck = useQuery(api.admin.isAdmin);
+    const isAdmin = adminCheck?.canAccessAdminPanel === true;
+
+    const events = useQuery(api.adminEvents.getAllEvents, isAdmin ? {
         searchTerm: debouncedSearch || undefined,
         status: statusFilter !== "all" ? statusFilter : undefined,
         category: categoryFilter !== "all" ? categoryFilter : undefined,
-    });
+    } : "skip");
 
-    const adminCheck = useQuery(api.admin.isAdmin);
     const updateStatus = useMutation(api.adminEvents.updateEventStatus);
     const bulkUpdate = useMutation(api.adminEvents.bulkUpdateEventStatus);
 

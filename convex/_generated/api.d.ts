@@ -14,6 +14,7 @@ import type * as adminEvents from "../adminEvents.js";
 import type * as adminRegistrations from "../adminRegistrations.js";
 import type * as dashboard from "../dashboard.js";
 import type * as devSeed from "../devSeed.js";
+import type * as eventReport from "../eventReport.js";
 import type * as events from "../events.js";
 import type * as explore from "../explore.js";
 import type * as migrations from "../migrations.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   adminRegistrations: typeof adminRegistrations;
   dashboard: typeof dashboard;
   devSeed: typeof devSeed;
+  eventReport: typeof eventReport;
   events: typeof events;
   explore: typeof explore;
   migrations: typeof migrations;

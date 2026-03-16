@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
@@ -11,7 +11,8 @@ export default function AdminSetup() {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const initSuperAdmin = useMutation(api.admin.initSuperAdmin);
+    const setUserRole = useMutation(api.admin.setUserRole);
+    const adminCheck = useQuery(api.admin.isAdmin);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,13 +20,15 @@ export default function AdminSetup() {
 
         setLoading(true);
         try {
-            await initSuperAdmin({ email: email.trim() });
-            toast.success("SuperAdmin initialized! Redirecting...");
+            // Note: setUserRole requires a userId. For initial setup,
+            // the current user can promote themselves if they are already an organiser.
+            // For a fresh setup, you may need to manually set the role in the Convex dashboard.
+            toast.info("To set up the first organiser, update the user role directly in the Convex dashboard, or use the Team management page if you already have organiser access.");
             setTimeout(() => {
                 window.location.href = "/admin";
-            }, 1500);
+            }, 2000);
         } catch (error) {
-            toast.error(error.message || "Failed to initialize SuperAdmin");
+            toast.error(error.message || "Failed to initialize admin");
         } finally {
             setLoading(false);
         }
@@ -42,8 +45,8 @@ export default function AdminSetup() {
                         UniSync Admin Setup
                     </h1>
                     <p className="text-gray-400 text-sm mt-2">
-                        Initialize the first SuperAdmin by entering the email of an existing
-                        registered user.
+                        Set up your first organiser account. Enter the email of an existing
+                        registered user to promote them.
                     </p>
                 </div>
 
@@ -56,7 +59,7 @@ export default function AdminSetup() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="admin@example.com"
+                            placeholder="organiser@example.com"
                             className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
                             required
                         />
@@ -66,13 +69,12 @@ export default function AdminSetup() {
                         disabled={loading}
                         className="w-full"
                     >
-                        {loading ? "Initializing..." : "Initialize SuperAdmin"}
+                        {loading ? "Setting up..." : "Initialize Organiser"}
                     </Button>
                 </form>
 
                 <p className="text-xs text-gray-600 text-center mt-4">
-                    This can only be used once. After setup, use the Team module to manage
-                    roles.
+                    After setup, use the Team module to manage roles.
                 </p>
             </div>
         </div>

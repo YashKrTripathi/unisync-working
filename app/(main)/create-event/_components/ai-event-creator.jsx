@@ -49,12 +49,12 @@ export default function AIEventCreator({ onEventGenerated }) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2 border-white/20 bg-black/30 text-white hover:bg-white/10">
           <Sparkles className="w-4 h-4" />
           Generate with AI
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="border-white/15 bg-[#0f172a]/95 text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-500" />
@@ -71,7 +71,7 @@ export default function AIEventCreator({ onEventGenerated }) {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Example: A tech meetup about React 19 for developers in Bangalore. It should cover new features like Actions and use hook improvements..."
             rows={6}
-            className="resize-none"
+            className="resize-none bg-white/5 border-white/15"
           />
 
           <div className="flex gap-2">

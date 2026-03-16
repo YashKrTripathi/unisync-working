@@ -221,7 +221,7 @@ export default function ExplorePage() {
               Browse by <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">Category</span>
             </h2>
             <p className="text-muted-foreground text-lg md:text-xl font-light max-w-2xl mx-auto">
-              Find exactly what you're passionate about.
+              Find exactly what you&apos;re passionate about.
             </p>
           </div>
 

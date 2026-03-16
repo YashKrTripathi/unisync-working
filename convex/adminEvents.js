@@ -5,19 +5,18 @@ import { v } from "convex/values";
 // ─── Helper: verify admin access ────────────────────────────────────────────
 async function requireAdmin(ctx) {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
-    const role = user?.role || "user";
-    if (!user || (role !== "superadmin" && role !== "admin")) {
-        throw new Error("Unauthorized: Admin access required");
+    const role = user?.role || "student";
+    if (!user || role !== "organiser") {
+        return null;
     }
     return { user, role };
 }
 
 async function requireSuperAdmin(ctx) {
-    const { user, role } = await requireAdmin(ctx);
-    if (role !== "superadmin") {
-        throw new Error("Unauthorized: SuperAdmin access required");
-    }
-    return { user, role };
+    const auth = await requireAdmin(ctx);
+    if (!auth) return null;
+    // In simplified system, organiser has full admin powers
+    return auth;
 }
 
 // ─── Queries ────────────────────────────────────────────────────────────────
@@ -30,7 +29,8 @@ export const getAllEvents = query({
         category: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return [];
 
         let events;
 
@@ -97,7 +97,8 @@ export const getAllEvents = query({
 export const getEventWithStats = query({
     args: { eventId: v.id("events") },
     handler: async (ctx, args) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return null;
 
         const event = await ctx.db.get(args.eventId);
         if (!event) throw new Error("Event not found");
@@ -165,7 +166,8 @@ export const getEventWithStats = query({
 export const getEventAuditLog = query({
     args: { eventId: v.id("events") },
     handler: async (ctx, args) => {
-        await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) return [];
 
         return await ctx.db
             .query("eventAuditLog")
@@ -192,7 +194,9 @@ export const updateEventStatus = mutation({
         reason: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const { user } = await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) throw new Error("Unauthorized");
+        const { user } = auth;
 
         const event = await ctx.db.get(args.eventId);
         if (!event) throw new Error("Event not found");
@@ -248,7 +252,9 @@ export const superAdminEditEvent = mutation({
         reason: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const { user } = await requireSuperAdmin(ctx);
+        const auth = await requireSuperAdmin(ctx);
+        if (!auth) throw new Error("Unauthorized");
+        const { user } = auth;
 
         const event = await ctx.db.get(args.eventId);
         if (!event) throw new Error("Event not found");
@@ -343,7 +349,9 @@ export const bulkUpdateEventStatus = mutation({
         reason: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const { user } = await requireAdmin(ctx);
+        const auth = await requireAdmin(ctx);
+        if (!auth) throw new Error("Unauthorized");
+        const { user } = auth;
 
         let updated = 0;
         for (const eventId of args.eventIds) {

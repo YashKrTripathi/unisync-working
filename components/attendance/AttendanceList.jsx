@@ -4,7 +4,6 @@ import React, { useState, useMemo } from "react";
 import { format } from "date-fns";
 import {
     Search,
-    Download,
     FileText,
     FileSpreadsheet,
     CheckCircle2,
@@ -16,7 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockAttendanceRecords } from "@/lib/mockData";
+import { useConvexQuery } from "@/hooks/use-convex-query";
+import { api } from "@/convex/_generated/api";
 
 const statusConfig = {
     attended: {
@@ -45,19 +45,59 @@ const statusConfig = {
 export default function AttendanceList({ eventId }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const { data: eventRegistrations = [] } = useConvexQuery(
+        api.registrations.getEventRegistrations,
+        eventId ? { eventId } : "skip"
+    );
+    const { data: allRegistrationsData } = useConvexQuery(
+        api.adminRegistrations.getAllRegistrations,
+        eventId ? "skip" : {}
+    );
+    const allRegistrations = useMemo(
+        () => allRegistrationsData?.registrations || [],
+        [allRegistrationsData]
+    );
 
-    // Filter records for this event (or show all for demo)
+    const normalizedRecords = useMemo(() => {
+        if (eventId) {
+            return eventRegistrations.map((registration) => ({
+                _id: registration._id,
+                attendeeName: registration.attendeeName,
+                attendeeEmail: registration.attendeeEmail,
+                department: "N/A",
+                attendanceStatus: registration.checkedIn ? "attended" : "registered",
+                qrScanned: registration.checkedIn,
+                manualEntry: false,
+                checkInTime: registration.checkedInAt,
+            }));
+        }
+
+        return allRegistrations.map((registration) => ({
+            _id: registration._id,
+            attendeeName: registration.attendeeName,
+            attendeeEmail: registration.attendeeEmail,
+            department: registration.eventCategory || "N/A",
+            attendanceStatus:
+                registration.status !== "confirmed"
+                    ? "absent"
+                    : registration.checkedIn
+                        ? "attended"
+                        : "registered",
+            qrScanned: registration.checkedIn,
+            manualEntry: false,
+            checkInTime: registration.checkedInAt,
+        }));
+    }, [eventId, eventRegistrations, allRegistrations]);
+
+    // Filter records for this event (or show all in admin view).
     const records = useMemo(() => {
-        let data = eventId
-            ? mockAttendanceRecords.filter((r) => r.eventId === eventId)
-            : mockAttendanceRecords;
-
+        let data = normalizedRecords;
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             data = data.filter(
                 (r) =>
-                    r.studentName.toLowerCase().includes(q) ||
-                    r.studentEmail.toLowerCase().includes(q) ||
+                    r.attendeeName.toLowerCase().includes(q) ||
+                    r.attendeeEmail.toLowerCase().includes(q) ||
                     r.department.toLowerCase().includes(q)
             );
         }
@@ -67,7 +107,7 @@ export default function AttendanceList({ eventId }) {
         }
 
         return data;
-    }, [eventId, searchQuery, statusFilter]);
+    }, [normalizedRecords, searchQuery, statusFilter]);
 
     const totalCount = records.length;
     const attendedCount = records.filter(
@@ -134,24 +174,41 @@ export default function AttendanceList({ eventId }) {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="border-white/10 text-gray-400 hover:bg-white/5 gap-1"
-                        onClick={() => {
-                            // TODO: Implement CSV export
-                            alert("CSV export coming soon!");
-                        }}
-                    >
+                                    className="border-white/10 text-gray-400 hover:bg-white/5 gap-1"
+                                    onClick={() => {
+                            const header = "Name,Email,Department,Status,CheckInTime";
+                            const rows = records.map((record) =>
+                                [
+                                    record.attendeeName,
+                                    record.attendeeEmail,
+                                    record.department,
+                                    record.attendanceStatus,
+                                    record.checkInTime ? format(record.checkInTime, "PPpp") : "",
+                                ]
+                                    .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+                                    .join(",")
+                            );
+                            const csv = [header, ...rows].join("\n");
+                            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = `attendance-${eventId || "all"}.csv`;
+                            link.click();
+                            URL.revokeObjectURL(url);
+                                    }}
+                                >
                         <FileSpreadsheet className="w-4 h-4" />
                         CSV
                     </Button>
                     <Button
                         variant="outline"
                         size="sm"
-                        className="border-white/10 text-gray-400 hover:bg-white/5 gap-1"
-                        onClick={() => {
-                            // TODO: Implement PDF export
-                            alert("PDF export coming soon!");
-                        }}
-                    >
+                                    className="border-white/10 text-gray-400 hover:bg-white/5 gap-1"
+                                    onClick={() => {
+                            window.print();
+                                    }}
+                                >
                         <FileText className="w-4 h-4" />
                         PDF
                     </Button>
@@ -193,10 +250,10 @@ export default function AttendanceList({ eventId }) {
                                     <td className="px-4 py-3">
                                         <div>
                                             <p className="font-medium text-white">
-                                                {record.studentName}
+                                                {record.attendeeName}
                                             </p>
                                             <p className="text-xs text-gray-500">
-                                                {record.studentEmail}
+                                                {record.attendeeEmail}
                                             </p>
                                         </div>
                                     </td>

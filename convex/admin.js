@@ -8,7 +8,7 @@ export const getAdminUsers = query({
         const user = await ctx.runQuery(internal.users.getCurrentUser);
         const role = user?.role || "student";
         if (!user || role !== "organiser") {
-            throw new Error("Unauthorized: Organiser access required");
+            return [];
         }
 
         const organisers = await ctx.db
@@ -79,7 +79,7 @@ export const getDashboardStats = query({
         const user = await ctx.runQuery(internal.users.getCurrentUser);
         const role = user?.role || "student";
         if (!user || role !== "organiser") {
-            throw new Error("Unauthorized: Organiser access required");
+            return null;
         }
 
         // Get all events
