@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
-  Building,
-  Plus,
-  Ticket,
-  Menu,
-  X,
+  CalendarPlus,
+  Compass,
   LayoutDashboard,
-  Sparkles
+  Menu,
+  Sparkles,
+  Ticket,
+  X,
 } from "lucide-react";
 import { BarLoader } from "react-spinners";
 import { Button } from "@/components/ui/button";
@@ -26,160 +27,271 @@ const isBackendEnabled = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 );
 
-// ============ SHARED COMPONENTS ============
+const primaryNav = [
+  { href: "/explore", label: "Explore" },
+  { href: "/past-events", label: "Archive" },
+  { href: "/attendance", label: "Attendance" },
+];
+
+function useScrolled(threshold = 24) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > threshold);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [threshold]);
+
+  return scrolled;
+}
+
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-3 group relative z-10">
-      <div className="flex items-center gap-2">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] group-hover:scale-105 group-hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] transition-all duration-300 border border-blue-400/30">
-          <span className="text-white font-black text-sm tracking-tighter">UN</span>
-        </div>
-        <div className="hidden sm:flex items-center">
-          <span className="text-xl font-black tracking-tight text-foreground group-hover:text-blue-500 transition-colors">
-            UNI
+    <Link href="/" className="group relative z-10 flex items-center gap-3">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/90 to-[#102347] text-white shadow-[0_18px_35px_rgba(26,89,191,0.38)]">
+        <span className="font-display text-sm font-bold tracking-[0.28em]">UN</span>
+      </div>
+      <div className="hidden min-w-0 sm:block">
+        <div className="flex items-center gap-2">
+          <span className="font-display text-xl font-semibold tracking-[-0.06em] text-white">
+            UniSync
           </span>
-          <span className="text-xl font-black tracking-tight text-blue-500">
-            SYNC
-          </span>
-          <div className="ml-3 px-2 py-0.5 rounded-full bg-dypiu-gold/10 border border-dypiu-gold/30 text-[10px] font-bold tracking-widest text-dypiu-gold uppercase flex items-center gap-1 shadow-[0_0_10px_rgba(245,158,11,0.1)]">
-            <Sparkles className="w-3 h-3" />
+          <span className="rounded-full border border-dypiu-gold/20 bg-dypiu-gold/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.28em] text-dypiu-gold-light">
             DYPIU
-          </div>
+          </span>
         </div>
+        <p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">
+          Campus Event Operating System
+        </p>
       </div>
     </Link>
   );
 }
 
-function DesktopNav() {
-  return (
-    <div className="hidden md:flex items-center gap-2 bg-card/40 backdrop-blur-xl border border-white/10 px-2 py-1.5 rounded-full shadow-lg">
-      <Link href="/explore" className="px-5 py-2 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all duration-300">
-        Explore
-      </Link>
-      <Link href="/past-events" className="px-5 py-2 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all duration-300">
-        Past Events
-      </Link>
-    </div>
-  );
-}
+function NavLink({ href, label, pathname, onClick }) {
+  const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
-function MobileMenuToggle({ open, setOpen }) {
   return (
-    <button
-      className="ml-3 md:hidden p-2.5 rounded-full bg-card/50 border border-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors"
-      onClick={() => setOpen(!open)}
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${
+        isActive
+          ? "bg-white/12 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+          : "text-slate-300 hover:bg-white/6 hover:text-white"
+      }`}
     >
-      {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-    </button>
+      {label}
+    </Link>
   );
 }
 
-function MobileMenu({ open, setOpen }) {
-  if (!open) return null;
+function DesktopNav({ pathname }) {
   return (
-    <div className="md:hidden absolute top-full left-0 right-0 border-t border-white/10 px-6 py-6 space-y-3 bg-background/95 backdrop-blur-3xl shadow-2xl origin-top animate-in slide-in-from-top-2 fade-in duration-200">
-      <Link href="/explore" className="block px-4 py-3 rounded-xl text-foreground font-medium bg-white/5 hover:bg-white/10 transition-colors" onClick={() => setOpen(false)}>
-        Explore Events
-      </Link>
-      <Link href="/past-events" className="block px-4 py-3 rounded-xl text-foreground font-medium bg-white/5 hover:bg-white/10 transition-colors" onClick={() => setOpen(false)}>
-        Past Events
-      </Link>
-      <Link href="/attendance" className="block px-4 py-3 rounded-xl text-foreground font-medium bg-white/5 hover:bg-white/10 transition-colors" onClick={() => setOpen(false)}>
-        Mark Attendance
-      </Link>
+    <div className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur-xl lg:flex">
+      {primaryNav.map((item) => (
+        <NavLink key={item.href} href={item.href} label={item.label} pathname={pathname} />
+      ))}
     </div>
   );
 }
 
-function useScrollDirection() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-  return scrolled;
-}
-
-// ============ MOCK HEADER ============
-function MockHeader() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { adminCheck } = useMockAuth();
-  const scrolled = useScrollDirection();
+function MobileMenu({ open, setOpen, pathname, adminCheck }) {
+  if (!open) return null;
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-background/70 backdrop-blur-2xl border-b border-white/10 shadow-2xl py-3' : 'bg-transparent py-5'}`}>
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between relative">
-        <Logo />
-        <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
-          <DesktopNav />
+    <div className="px-4 pt-3 sm:px-6 lg:hidden">
+      <div className="premium-surface mx-auto max-w-7xl overflow-hidden rounded-[1.75rem] p-4">
+        <div className="space-y-2">
+          {primaryNav.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              label={item.label}
+              pathname={pathname}
+              onClick={() => setOpen(false)}
+            />
+          ))}
         </div>
-        <div className="flex items-center gap-3 relative z-10">
-          {adminCheck?.canAccessAdminPanel && (
-            <Button variant="ghost" size="sm" asChild className="hidden lg:flex text-dypiu-gold hover:text-dypiu-gold-light hover:bg-dypiu-gold/10 rounded-full px-4">
-              <Link href="/admin">
-                <LayoutDashboard className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
-            </Button>
-          )}
-          {adminCheck?.canCreateEvents && (
-            <Button size="sm" asChild className="hidden sm:flex gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] rounded-full px-5 transition-all duration-300 hover:scale-105">
-              <Link href="/create-event">
-                <Plus className="w-4 h-4" />
-                Create Event
-              </Link>
-            </Button>
-          )}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold cursor-pointer shadow-lg border border-white/20 hover:scale-110 transition-transform">
-            {adminCheck?.role === "organiser" ? "O" : "S"}
+
+        {(adminCheck?.canCreateEvents || adminCheck?.canAccessAdminPanel) && (
+          <>
+            <div className="soft-divider my-4" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              {adminCheck?.canCreateEvents && (
+                <Link
+                  href="/create-event"
+                  onClick={() => setOpen(false)}
+                  className="premium-card flex items-center justify-between rounded-[1.35rem] px-4 py-4"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-white">Create Event</p>
+                    <p className="text-xs text-slate-400">Launch a polished new listing.</p>
+                  </div>
+                  <CalendarPlus className="h-5 w-5 text-blue-300" />
+                </Link>
+              )}
+              {adminCheck?.canAccessAdminPanel && (
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="premium-card flex items-center justify-between rounded-[1.35rem] px-4 py-4"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-white">Dashboard</p>
+                    <p className="text-xs text-slate-400">Track registrations and reports.</p>
+                  </div>
+                  <LayoutDashboard className="h-5 w-5 text-dypiu-gold-light" />
+                </Link>
+              )}
+            </div>
+          </>
+        )}
+
+        <div className="soft-divider my-4" />
+        <div className="flex items-center gap-3 rounded-[1.35rem] border border-white/8 bg-white/4 px-4 py-4">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-300">
+            <Compass className="h-5 w-5" />
           </div>
-          <MobileMenuToggle open={mobileMenuOpen} setOpen={setMobileMenuOpen} />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white">Designed for event momentum</p>
+            <p className="text-xs text-slate-400">
+              Clear discovery, faster check-ins, and cleaner operations.
+            </p>
+          </div>
         </div>
       </div>
-      <MobileMenu open={mobileMenuOpen} setOpen={setMobileMenuOpen} />
+    </div>
+  );
+}
+
+function HeaderFrame({ adminCheck, rightContent, showLoadingLine = false }) {
+  const pathname = usePathname();
+  const scrolled = useScrolled();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isHomePage = pathname === "/";
+  const useSolidShell = scrolled || !isHomePage;
+
+  return (
+    <nav className="fixed inset-x-0 top-0 z-50">
+      <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6">
+        <div
+          className={`relative rounded-[1.9rem] px-4 py-3 sm:px-5 ${
+            useSolidShell
+              ? "premium-surface glow-border"
+              : "border border-white/10 bg-[#091424]/62 backdrop-blur-2xl"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <Logo />
+            <DesktopNav pathname={pathname} />
+
+            <div className="relative z-10 flex items-center gap-2 sm:gap-3">
+              {adminCheck?.canAccessAdminPanel && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="hidden rounded-full px-4 text-dypiu-gold-light hover:bg-dypiu-gold/10 hover:text-dypiu-gold-light lg:inline-flex"
+                >
+                  <Link href="/admin">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </Button>
+              )}
+
+              {rightContent}
+
+              <button
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 lg:hidden"
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+
+          {showLoadingLine && (
+            <div className="absolute inset-x-4 bottom-0 overflow-hidden rounded-full">
+              <BarLoader width="100%" height={2} color="#61a6ff" speedMultiplier={0.8} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <MobileMenu
+        open={mobileMenuOpen}
+        setOpen={setMobileMenuOpen}
+        pathname={pathname}
+        adminCheck={adminCheck}
+      />
     </nav>
   );
 }
 
-// ============ AUTH HEADER ============
+function MockHeader() {
+  const { adminCheck } = useMockAuth();
+
+  return (
+    <HeaderFrame
+      adminCheck={adminCheck}
+      rightContent={
+        <>
+          {adminCheck?.canCreateEvents && (
+            <Button
+              size="sm"
+              asChild
+              className="hidden rounded-full bg-primary px-5 text-primary-foreground shadow-[0_18px_35px_rgba(44,126,248,0.3)] hover:scale-[1.02] hover:bg-primary/90 sm:inline-flex"
+            >
+              <Link href="/create-event">
+                <CalendarPlus className="mr-2 h-4 w-4" />
+                Create Event
+              </Link>
+            </Button>
+          )}
+
+          <div className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-slate-300 sm:block">
+            {adminCheck?.role === "organiser" ? "Organizer Mode" : "Student Mode"}
+          </div>
+        </>
+      }
+    />
+  );
+}
+
 function AuthHeader() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isLoading } = useStoreUser();
   const { showOnboarding, handleOnboardingComplete, handleOnboardingSkip } = useOnboarding();
   const adminCheck = useQuery(api.admin.isAdmin);
-  const scrolled = useScrollDirection();
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-background/70 backdrop-blur-2xl border-b border-white/10 shadow-2xl py-3' : 'bg-transparent py-5'}`}>
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between relative">
-          <Logo />
-          <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
-            <DesktopNav />
-          </div>
-          <div className="flex items-center gap-3 relative z-10">
-            {adminCheck?.canAccessAdminPanel && (
-              <Button variant="ghost" size="sm" asChild className="hidden lg:flex text-dypiu-gold hover:text-dypiu-gold-light hover:bg-dypiu-gold/10 rounded-full px-4">
-                <Link href="/admin">
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Link>
-              </Button>
-            )}
+      <HeaderFrame
+        adminCheck={adminCheck}
+        showLoadingLine={isLoading}
+        rightContent={
+          <>
             <Authenticated>
               {adminCheck?.canCreateEvents && (
-                <Button size="sm" asChild className="hidden sm:flex gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] rounded-full px-5 transition-all duration-300 hover:scale-105">
+                <Button
+                  size="sm"
+                  asChild
+                  className="hidden rounded-full bg-primary px-5 text-primary-foreground shadow-[0_18px_35px_rgba(44,126,248,0.3)] hover:scale-[1.02] hover:bg-primary/90 sm:inline-flex"
+                >
                   <Link href="/create-event">
-                    <Plus className="w-4 h-4" />
+                    <CalendarPlus className="mr-2 h-4 w-4" />
                     Create Event
                   </Link>
                 </Button>
               )}
-              <div className="ml-2 ring-2 ring-primary/20 rounded-full hover:ring-primary/60 transition-all duration-300 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+
+              <div className="hidden rounded-full border border-white/10 bg-white/5 p-1 shadow-[0_12px_30px_rgba(2,8,20,0.22)] sm:block">
                 <UserButton
                   afterSignOutUrl="/"
                   appearance={{
@@ -190,39 +302,50 @@ function AuthHeader() {
                   }}
                 >
                   <UserButton.MenuItems>
-                    <UserButton.Link label="My Tickets" labelIcon={<Ticket size={16} />} href="/my-tickets" />
-                    <UserButton.Link label="My Events" labelIcon={<Building size={16} />} href="/my-events" />
+                    <UserButton.Link
+                      label="My Tickets"
+                      labelIcon={<Ticket size={16} />}
+                      href="/my-tickets"
+                    />
+                    <UserButton.Link
+                      label="My Events"
+                      labelIcon={<CalendarPlus size={16} />}
+                      href="/my-events"
+                    />
                     <UserButton.Action label="manageAccount" />
                   </UserButton.MenuItems>
                 </UserButton>
               </div>
             </Authenticated>
+
             <Unauthenticated>
               <SignInButton mode="modal">
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] rounded-full px-6 font-semibold transition-all duration-300 hover:scale-105">
+                <Button
+                  size="sm"
+                  className="rounded-full bg-primary px-5 text-primary-foreground shadow-[0_18px_35px_rgba(44,126,248,0.3)] hover:scale-[1.02] hover:bg-primary/90"
+                >
+                  <Sparkles className="mr-2 h-4 w-4 text-dypiu-gold-light" />
                   Sign In
                 </Button>
               </SignInButton>
             </Unauthenticated>
-            <MobileMenuToggle open={mobileMenuOpen} setOpen={setMobileMenuOpen} />
-          </div>
-        </div>
-        <MobileMenu open={mobileMenuOpen} setOpen={setMobileMenuOpen} />
-        {isLoading && (
-          <div className="absolute bottom-0 left-0 w-full h-[2px] overflow-hidden">
-            <BarLoader width={"100%"} height={2} color="#3b82f6" speedMultiplier={0.8} />
-          </div>
-        )}
-      </nav>
-      <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingSkip} onComplete={handleOnboardingComplete} />
+          </>
+        }
+      />
+
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={handleOnboardingSkip}
+        onComplete={handleOnboardingComplete}
+      />
     </>
   );
 }
 
-// ============ MAIN EXPORT ============
 export default function Header() {
   if (isBackendEnabled) {
     return <AuthHeader />;
   }
+
   return <MockHeader />;
 }

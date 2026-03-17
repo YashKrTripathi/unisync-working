@@ -7,7 +7,7 @@ import QuickActions from "@/components/home/QuickActions";
 
 export default function HomePage() {
   return (
-    <div className="-mt-10">
+    <div className="page-shell">
       <Hero />
       <AboutEvents />
       <UpcomingEvents />

@@ -2,108 +2,303 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Calendar, Sparkles, ChevronRight, GraduationCap } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  CalendarDays,
+  CheckCircle2,
+  Compass,
+  QrCode,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const heroSignals = [
+  { label: "Departments active", value: "12", tone: "text-blue-300" },
+  { label: "Avg check-in speed", value: "< 6 sec", tone: "text-dypiu-gold-light" },
+  { label: "Reports delivered", value: "Same day", tone: "text-emerald-300" },
+];
+
+const workflow = [
+  {
+    step: "01",
+    title: "Launch clean event pages",
+    description: "Structure event details so students can trust what they are signing up for.",
+  },
+  {
+    step: "02",
+    title: "Handle attendance faster",
+    description: "Use QR-first check-ins instead of manual lists and fragmented follow-up.",
+  },
+  {
+    step: "03",
+    title: "Close the loop with reports",
+    description: "Export performance and attendance insights without chasing data across tools.",
+  },
+];
+
+const controlHighlights = [
+  {
+    icon: CalendarDays,
+    title: "Scheduling clarity",
+    description: "One place to manage sessions, venues, timings, and visibility.",
+    value: "Live",
+  },
+  {
+    icon: Users,
+    title: "Registration pulse",
+    description: "Watch turnout, capacity, and attendance trends update in real time.",
+    value: "Realtime",
+  },
+  {
+    icon: QrCode,
+    title: "Check-in flow",
+    description: "Shorter queues with professional event-day operations.",
+    value: "92%",
+  },
+  {
+    icon: BarChart3,
+    title: "Post-event reporting",
+    description: "Give teams a clear story they can act on immediately.",
+    value: "Ready",
+  },
+];
+
+const schedulePreview = [
+  { time: "09:00", title: "Speaker check-in", meta: "Main auditorium" },
+  { time: "10:15", title: "Registration peak", meta: "North lobby" },
+  { time: "12:00", title: "Workshop batch 2", meta: "Lab block" },
+];
+
 export default function Hero() {
-    return (
-        <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden py-20 md:py-32">
-            {/* Premium Animated Background Elements */}
-            <div className="pointer-events-none absolute inset-0 -z-10 bg-background">
-                {/* Glowing Orbs */}
-                <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-dypiu-navy/20 rounded-full blur-[120px] mix-blend-screen animate-pulse-glow" />
-                <div className="absolute bottom-[10%] right-[20%] w-[600px] h-[600px] bg-dypiu-gold/10 rounded-full blur-[150px] mix-blend-screen animate-pulse-glow delay-700" />
-                <div className="absolute top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
+  return (
+    <section className="section-shell overflow-hidden pb-20 pt-8 md:pb-28 md:pt-10">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="site-grid absolute inset-0 opacity-[0.08] [mask-image:radial-gradient(circle_at_center,black,transparent_78%)]" />
+        <div className="absolute left-[6%] top-[8%] h-[24rem] w-[24rem] rounded-full bg-blue-500/18 blur-[130px] animate-drift" />
+        <div className="absolute bottom-[8%] right-[8%] h-[20rem] w-[20rem] rounded-full bg-dypiu-gold/12 blur-[120px] animate-float-slow" />
+      </div>
 
-                {/* Grid pattern with gradient fade */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background"></div>
+      <div className="mx-auto grid max-w-7xl gap-14 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+        <div className="relative z-10">
+          <div className="eyebrow">
+            <Sparkles className="h-3.5 w-3.5 text-dypiu-gold-light" />
+            <span>Professional campus event experience</span>
+          </div>
 
-                {/* Modern grid */}
-                <div
-                    className="absolute inset-0 opacity-[0.05]"
-                    style={{
-                        backgroundImage: `linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)`,
-                        backgroundSize: "40px 40px",
-                        maskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
-                        WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)"
-                    }}
-                />
+          <h1 className="section-heading text-balance mt-6 max-w-4xl text-5xl text-white sm:text-6xl lg:text-7xl xl:text-[5.35rem]">
+            A sharper, faster way to run campus events at scale.
+          </h1>
+
+          <p className="text-balance mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
+            UniSync gives students a polished discovery experience and gives organizers a
+            command center for registrations, QR attendance, and reporting.
+          </p>
+
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+            <Button
+              asChild
+              size="xl"
+              className="rounded-full bg-primary text-primary-foreground shadow-[0_24px_48px_rgba(44,126,248,0.28)] hover:bg-primary/90"
+            >
+              <Link href="/explore">
+                Explore Events
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="xl"
+              className="rounded-full border-white/10 bg-white/5 text-white hover:bg-white/10"
+            >
+              <Link href="/create-event">Launch an Event</Link>
+            </Button>
+
+            <a
+              href="#platform-why"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-3 text-sm font-semibold text-slate-300 hover:text-white"
+            >
+              <Compass className="h-4 w-4 text-blue-300" />
+              See the workflow
+            </a>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <div className="premium-card inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm text-slate-200">
+              <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+              Student-friendly discovery
+            </div>
+            <div className="premium-card inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm text-slate-200">
+              <QrCode className="h-4 w-4 text-blue-300" />
+              QR-first attendance
+            </div>
+            <div className="premium-card inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm text-slate-200">
+              <BarChart3 className="h-4 w-4 text-dypiu-gold-light" />
+              Instant reporting
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {heroSignals.map((signal) => (
+              <div key={signal.label} className="premium-card rounded-[1.65rem] p-5">
+                <p className={`font-display text-2xl font-semibold ${signal.tone}`}>{signal.value}</p>
+                <p className="mt-2 text-sm text-slate-400">{signal.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="premium-surface mt-10 rounded-[2rem] p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
+                  Event lifecycle
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-semibold text-white">
+                  Professional UX from launch to wrap-up
+                </h2>
+              </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
-                <div className="text-center max-w-5xl mx-auto flex flex-col items-center">
-
-                    {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-dypiu-gold/30 text-dypiu-gold-light text-sm font-medium mb-8 backdrop-blur-md shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-dypiu-gold/10 hover:border-dypiu-gold/50 transition-all duration-300 hover:-translate-y-1 cursor-default animate-fade-in-up glass-light">
-                        <GraduationCap className="w-5 h-5 text-dypiu-gold" />
-                        <span className="tracking-widest uppercase text-xs md:text-sm font-bold bg-gradient-to-r from-dypiu-gold via-yellow-300 to-dypiu-gold bg-clip-text text-transparent animate-gradient">
-                            D Y Patil International University
-                        </span>
-                    </div>
-
-                    {/* Main Title */}
-                    <h1 className="text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black tracking-tighter mb-6 animate-fade-in-up delay-100 leading-none">
-                        <span className="text-foreground drop-shadow-sm">
-                            UNI
-                        </span>
-                        <span className="bg-gradient-to-br from-blue-500 via-dypiu-navy-light to-blue-600 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(37,99,235,0.3)]">
-                            SYNC
-                        </span>
-                    </h1>
-
-                    {/* Subtitle */}
-                    <p className="text-xl sm:text-2xl md:text-3xl text-muted-foreground mt-4 mb-12 max-w-4xl mx-auto font-light leading-relaxed animate-fade-in-up delay-200">
-                        The ultimate ecosystem for campus culture. <br className="hidden md:block" /> Discover, organize, and experience events with zero friction.
-                    </p>
-
-                    {/* CTA Buttons */}
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full sm:w-auto animate-fade-in-up delay-300">
-                        <Link href="/explore" className="w-full sm:w-auto">
-                            <Button
-                                size="lg"
-                                className="w-full sm:w-auto rounded-full px-10 py-8 text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(30,58,138,0.4)] group"
-                            >
-                                <Sparkles className="w-6 h-6 mr-3 text-dypiu-gold group-hover:animate-pulse" />
-                                Explore Events
-                                <ChevronRight className="w-6 h-6 ml-2 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                        </Link>
-                        <Link href="/create-event" className="w-full sm:w-auto">
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                className="w-full sm:w-auto rounded-full px-10 py-8 text-lg font-semibold border-border bg-card/5 text-foreground backdrop-blur-md hover:bg-card/10 hover:border-dypiu-gold/50 transition-all duration-300 group"
-                            >
-                                <Calendar className="w-6 h-6 mr-3 text-dypiu-navy-light group-hover:scale-110 transition-transform" />
-                                Organize an Event
-                            </Button>
-                        </Link>
-                    </div>
-
-                    {/* Floating Stats or Features */}
-                    <div className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 w-full max-w-5xl opacity-90 hover:opacity-100 transition-opacity duration-500 animate-fade-in-up delay-500">
-                        {[
-                            { value: "50+", label: "Active Events", color: "from-blue-400 to-blue-600" },
-                            { value: "10K+", label: "Happy Students", color: "from-dypiu-gold to-yellow-600" },
-                            { value: "12", label: "Departments", color: "from-dypiu-red to-red-600" },
-                            { value: "24/7", label: "Campus Life", color: "from-indigo-400 to-indigo-600" },
-                        ].map((stat) => (
-                            <div key={stat.label} className="flex flex-col items-center justify-center p-8 rounded-3xl glass-light hover:bg-white/[0.04] transition-colors border-t border-white/10 shadow-xl">
-                                <div className={`text-4xl sm:text-5xl font-black bg-gradient-to-br ${stat.color} bg-clip-text text-transparent mb-3`}>
-                                    {stat.value}
-                                </div>
-                                <div className="text-sm md:text-base text-muted-foreground font-semibold tracking-wider uppercase">
-                                    {stat.label}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {workflow.map((item) => (
+                <div key={item.step} className="premium-card rounded-[1.5rem] p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-300">
+                    {item.step}
+                  </p>
+                  <h3 className="mt-3 text-base font-semibold text-white">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{item.description}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10">
+          <div className="premium-surface relative overflow-hidden rounded-[2.2rem] p-6 md:p-7">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-blue-500/10 blur-[90px]" />
+
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
+                  Event control room
+                </p>
+                <h2 className="mt-2 font-display text-3xl font-semibold text-white">
+                  Live campus operations
+                </h2>
+                <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
+                  A cleaner way to monitor registrations, attendance flow, and event-day
+                  momentum.
+                </p>
+              </div>
+              <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">
+                Active
+              </div>
             </div>
 
-            {/* Bottom Gradient Fade */}
-            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent pointer-events-none"></div>
-        </section>
-    );
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {controlHighlights.map((highlight) => (
+                <div key={highlight.title} className="premium-card rounded-[1.5rem] p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/6 text-blue-200">
+                      <highlight.icon className="h-5 w-5" />
+                    </div>
+                    <span className="rounded-full bg-white/6 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
+                      {highlight.value}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 text-base font-semibold text-white">{highlight.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{highlight.description}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="premium-card rounded-[1.65rem] p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      Today&apos;s timeline
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-white">Flagship tech summit</h3>
+                  </div>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
+                    248 attendees
+                  </span>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {schedulePreview.map((item) => (
+                    <div
+                      key={item.time}
+                      className="flex items-start gap-4 rounded-[1.2rem] border border-white/8 bg-white/4 px-4 py-3"
+                    >
+                      <div className="rounded-xl bg-blue-500/10 px-3 py-2 text-sm font-semibold text-blue-200">
+                        {item.time}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white">{item.title}</p>
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                          {item.meta}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="premium-card rounded-[1.65rem] p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  Attendance health
+                </p>
+                <div className="mt-6 flex items-center justify-center">
+                  <div className="relative flex h-40 w-40 items-center justify-center rounded-full border border-blue-400/20 bg-[radial-gradient(circle_at_center,rgba(44,126,248,0.22),transparent_65%)]">
+                    <div className="flex h-28 w-28 items-center justify-center rounded-full border border-white/10 bg-[#07111f]/90">
+                      <div className="text-center">
+                        <p className="font-display text-4xl font-semibold text-white">92%</p>
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
+                          checked in
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      <span>Queue stability</span>
+                      <span>High</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-white/6">
+                      <div className="h-2 w-[82%] rounded-full bg-gradient-to-r from-blue-400 to-cyan-300" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      <span>Report readiness</span>
+                      <span>Complete</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-white/6">
+                      <div className="h-2 w-[94%] rounded-full bg-gradient-to-r from-dypiu-gold to-orange-300" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="premium-card absolute -right-4 top-10 hidden rounded-[1.4rem] px-4 py-3 text-sm text-slate-200 xl:block">
+            Next major launch in 48 min
+          </div>
+          <div className="premium-card absolute -bottom-6 left-6 hidden rounded-[1.4rem] px-4 py-3 text-sm text-slate-200 xl:block">
+            Organizer workflow now feels operational
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
