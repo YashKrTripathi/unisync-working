@@ -1,0 +1,67 @@
+/* eslint-disable */
+/**
+ * Generated `api` utility.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
+
+import type * as admin from "../admin.js";
+import type * as adminAnalytics from "../adminAnalytics.js";
+import type * as adminEvents from "../adminEvents.js";
+import type * as adminRegistrations from "../adminRegistrations.js";
+import type * as dashboard from "../dashboard.js";
+import type * as devSeed from "../devSeed.js";
+import type * as eventReport from "../eventReport.js";
+import type * as events from "../events.js";
+import type * as explore from "../explore.js";
+import type * as migrations from "../migrations.js";
+import type * as registrations from "../registrations.js";
+import type * as search from "../search.js";
+import type * as seed from "../seed.js";
+import type * as users from "../users.js";
+
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
+/**
+ * A utility for referencing Convex functions in your app's API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
+  adminAnalytics: typeof adminAnalytics;
+  adminEvents: typeof adminEvents;
+  adminRegistrations: typeof adminRegistrations;
+  dashboard: typeof dashboard;
+  devSeed: typeof devSeed;
+  eventReport: typeof eventReport;
+  events: typeof events;
+  explore: typeof explore;
+  migrations: typeof migrations;
+  registrations: typeof registrations;
+  search: typeof search;
+  seed: typeof seed;
+  users: typeof users;
+}>;
+declare const fullApiWithMounts: typeof fullApi;
+
+export declare const api: FilterApi<
+  typeof fullApiWithMounts,
+  FunctionReference<any, "public">
+>;
+export declare const internal: FilterApi<
+  typeof fullApiWithMounts,
+  FunctionReference<any, "internal">
+>;
+
+export declare const components: {};

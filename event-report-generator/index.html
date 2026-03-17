@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Report Generator — DYPIU</title>
+  <meta name="description" content="Generate structured event reports with geo-tagged photographs and signed approval for D. Y. Patil International University, Pune." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- ─── Header ─────────────────────────────────────────────── -->
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+          </div>
+          <div>
+            <h1 class="brand-title">Event Report Generator</h1>
+            <p class="brand-subtitle">D. Y. Patil International University, Pune</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ─── Main Form ──────────────────────────────────────────── -->
+    <main class="main-content">
+      <form id="reportForm" autocomplete="off">
+
+        <!-- ── Section: Basic Event Details ─────────────────────── -->
+        <section class="form-section">
+          <div class="section-header">
+            <span class="section-badge">Section A</span>
+            <h2 class="section-title">Basic Event Details</h2>
+          </div>
+
+          <div class="field-group">
+            <div class="field" data-num="1">
+              <label for="eventTitle">Title of the Event <span class="req">*</span></label>
+              <input type="text" id="eventTitle" placeholder="e.g. National Workshop on Artificial Intelligence" required />
+            </div>
+
+            <div class="field-row">
+              <div class="field" data-num="2">
+                <label for="eventType">Type of Event <span class="req">*</span></label>
+                <select id="eventType" required>
+                  <option value="">Select type…</option>
+                  <option value="tech">Technology / Workshop</option>
+                  <option value="cultural">Cultural Event</option>
+                  <option value="sports">Sports Event</option>
+                  <option value="academic">Academic / Seminar</option>
+                  <option value="workshop">Workshop</option>
+                  <option value="seminar">Seminar</option>
+                  <option value="webinar">Webinar</option>
+                  <option value="hackathon">Hackathon</option>
+                  <option value="conference">Conference</option>
+                  <option value="social">Social Event</option>
+                </select>
+              </div>
+
+              <div class="field" data-num="3">
+                <label for="department">Organizing Department / Club <span class="req">*</span></label>
+                <input type="text" id="department" placeholder="e.g. CodeDecode DYPIU Club (SOCSEA)" required />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field" data-num="4">
+                <label for="startDate">Start Date &amp; Time <span class="req">*</span></label>
+                <input type="datetime-local" id="startDate" required />
+              </div>
+              <div class="field" data-num="5">
+                <label for="endDate">End Date &amp; Time <span class="req">*</span></label>
+                <input type="datetime-local" id="endDate" required />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field" data-num="6">
+                <label for="venue">Venue <span class="req">*</span></label>
+                <input type="text" id="venue" placeholder="e.g. Auditorium A, Block 3, DYPIU Campus" required />
+              </div>
+              <div class="field" data-num="7">
+                <label for="targetParticipants">Target Participants</label>
+                <input type="text" id="targetParticipants" placeholder="e.g. B.Tech 3rd Year Students" />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field" data-num="8">
+                <label for="numRegistered">No. of Registered Participants <span class="req">*</span></label>
+                <input type="number" id="numRegistered" min="0" placeholder="e.g. 120" required />
+              </div>
+              <div class="field" data-num="9">
+                <label for="numAttended">No. of Attended Participants <span class="req">*</span></label>
+                <input type="number" id="numAttended" min="0" placeholder="e.g. 98" required />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field" data-num="10">
+                <label for="coordinators">Coordinator(s) <span class="req">*</span></label>
+                <input type="text" id="coordinators" placeholder="e.g. Prof. Rajesh Kumar, Dr. Sneha Patil" required />
+              </div>
+              <div class="field" data-num="11">
+                <label for="resourcePersons">Resource Person(s)</label>
+                <input type="text" id="resourcePersons" placeholder="e.g. Dr. A. Sharma, XYZ Corp." />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Section: Objectives & Outcomes ──────────────────── -->
+        <section class="form-section">
+          <div class="section-header">
+            <span class="section-badge">Section B</span>
+            <h2 class="section-title">Objectives &amp; Outcomes</h2>
+          </div>
+
+          <div class="field-group">
+            <div class="field" data-num="12">
+              <label>Event Objectives <span class="req">*</span></label>
+              <p class="field-hint">Action-verb bullet points (e.g. "To enhance practical skills in…")</p>
+              <div id="objectivesList" class="dynamic-list">
+                <div class="dynamic-item">
+                  <span class="item-num">1.</span>
+                  <input type="text" class="objective-input" placeholder="To provide hands-on training in…" />
+                  <button type="button" class="btn-remove" title="Remove" style="visibility:hidden">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+              <button type="button" id="addObjective" class="btn-add">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                Add another objective
+              </button>
+            </div>
+
+            <div class="field" data-num="13">
+              <label>Key Outcomes <span class="req">*</span></label>
+              <p class="field-hint">What participants gained from the event</p>
+              <div id="outcomesList" class="dynamic-list">
+                <div class="dynamic-item">
+                  <span class="item-num">1.</span>
+                  <input type="text" class="outcome-input" placeholder="Comprehensive understanding of…" />
+                  <button type="button" class="btn-remove" title="Remove" style="visibility:hidden">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+              <button type="button" id="addOutcome" class="btn-add">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                Add another outcome
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Section: Brief Report ───────────────────────────── -->
+        <section class="form-section">
+          <div class="section-header">
+            <span class="section-badge">Section C</span>
+            <h2 class="section-title">Brief Report &amp; Feedback</h2>
+          </div>
+
+          <div class="field-group">
+            <div class="field" data-num="14">
+              <label for="briefReport">Brief Report / Narrative <span class="req">*</span></label>
+              <p class="field-hint">Detailed account of the event (Introduction, Core Content, Interaction, Conclusion)</p>
+              <textarea id="briefReport" rows="6" placeholder="The event commenced with a welcome address by…" required></textarea>
+            </div>
+
+            <div class="field" data-num="15">
+              <label>Feedback Summary</label>
+              <div class="field-row three-col">
+                <div>
+                  <label class="sub-label" for="feedbackRating">Overall Rating</label>
+                  <input type="text" id="feedbackRating" placeholder="e.g. 4.5/5" />
+                </div>
+                <div>
+                  <label class="sub-label" for="feedbackBest">Most Liked Aspect</label>
+                  <input type="text" id="feedbackBest" placeholder="e.g. Hands-on sessions" />
+                </div>
+                <div>
+                  <label class="sub-label" for="feedbackImprove">Area for Improvement</label>
+                  <input type="text" id="feedbackImprove" placeholder="e.g. More duration" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Section: Photographs ────────────────────────────── -->
+        <section class="form-section">
+          <div class="section-header">
+            <span class="section-badge">Section D</span>
+            <h2 class="section-title">Event Photographs</h2>
+            <p class="section-desc">Upload 2–6 geo-tagged JPEG photographs of the event</p>
+          </div>
+
+          <div class="field-group">
+            <div class="field" data-num="16">
+              <div id="photoUploadArea" class="upload-area">
+                <div class="upload-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </div>
+                <p class="upload-text">Drag &amp; drop photos here or <span class="upload-browse">browse files</span></p>
+                <p class="upload-hint">JPEG/PNG • 2 to 6 images • Geo-tagged recommended</p>
+                <input type="file" id="photoInput" accept="image/jpeg,image/png,image/jpg" multiple hidden />
+              </div>
+
+              <div id="photoPreviewGrid" class="photo-grid"></div>
+              <p id="photoError" class="field-error" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Section: Signed Approval ────────────────────────── -->
+        <section class="form-section">
+          <div class="section-header">
+            <span class="section-badge">Section E</span>
+            <h2 class="section-title">Signed Approval Document</h2>
+            <p class="section-desc">Upload the PDF of signed approval of the event</p>
+          </div>
+
+          <div class="field-group">
+            <div class="field" data-num="17">
+              <div id="pdfUploadArea" class="upload-area upload-area-compact">
+                <div class="upload-icon-sm">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <p class="upload-text">Drop your signed approval PDF here or <span class="upload-browse">browse</span></p>
+                <p class="upload-hint">PDF format only</p>
+                <input type="file" id="pdfInput" accept="application/pdf" hidden />
+              </div>
+
+              <div id="pdfPreview" class="pdf-preview" hidden>
+                <div class="pdf-preview-info">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <span id="pdfFileName"></span>
+                </div>
+                <button type="button" id="removePdf" class="btn-remove-file" title="Remove PDF">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Generate Button ─────────────────────────────────── -->
+        <div class="generate-section">
+          <button type="submit" id="generateBtn" class="btn-generate">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Generate &amp; Download PDF Report
+          </button>
+          <p class="generate-hint">All sections will be compiled into a single PDF document</p>
+        </div>
+
+      </form>
+    </main>
+
+    <!-- ─── Toast ──────────────────────────────────────────────── -->
+    <div id="toast" class="toast" hidden>
+      <span id="toastMsg"></span>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
