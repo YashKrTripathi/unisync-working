@@ -28,7 +28,7 @@ function ConvexAdminGuard({ children }) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#0c1222]">
                 <div className="text-center">
-                    <BarLoader width={200} color="#3b82f6" />
+                    <BarLoader width={200} color="#0288D1" />
                     <p className="text-gray-400 mt-4">Verifying access...</p>
                 </div>
             </div>

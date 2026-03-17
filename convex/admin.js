@@ -73,6 +73,46 @@ export const setUserRole = mutation({
     },
 });
 
+// Get all users for admin team management
+export const getAllUsersForAdmin = query({
+    args: {},
+    handler: async (ctx) => {
+        const user = await ctx.runQuery(internal.users.getCurrentUser);
+        const role = user?.role || "student";
+        if (!user || role !== "organiser") {
+            return { users: [], stats: { total: 0, organisers: 0, students: 0 } };
+        }
+
+        const allUsers = await ctx.db.query("users").collect();
+
+        const stats = {
+            total: allUsers.length,
+            organisers: allUsers.filter((u) => (u.role || "student") === "organiser").length,
+            students: allUsers.filter((u) => (u.role || "student") === "student").length,
+        };
+
+        // Sort by createdAt desc
+        allUsers.sort((a, b) => b.createdAt - a.createdAt);
+
+        return { users: allUsers, stats };
+    },
+});
+
+// Find user by email (for admin setup)
+export const findUserByEmail = query({
+    args: { email: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.runQuery(internal.users.getCurrentUser);
+        const role = user?.role || "student";
+        if (!user || role !== "organiser") {
+            return null;
+        }
+
+        const allUsers = await ctx.db.query("users").collect();
+        return allUsers.find((u) => u.email.toLowerCase() === args.email.toLowerCase()) || null;
+    },
+});
+
 // Get aggregated dashboard stats (for organiser dashboard)
 export const getDashboardStats = query({
     handler: async (ctx) => {
@@ -97,6 +137,9 @@ export const getDashboardStats = query({
         );
         const upcomingEvents = allEvents.filter(
             (e) => e.startDate > now && e.startDate <= sevenDaysFromNow
+        );
+        const pendingEvents = allEvents.filter(
+            (e) => e.status === "pending"
         );
 
         // Aggregated revenue
@@ -139,6 +182,7 @@ export const getDashboardStats = query({
         return {
             liveEvents,
             upcomingEvents,
+            pendingEvents,
             totalEvents: allEvents.length,
             totalRevenue,
             monthlyRevenue,

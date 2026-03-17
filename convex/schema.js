@@ -127,6 +127,52 @@ export default defineSchema({
     .index("by_event_user", ["eventId", "userId"])
     .index("by_qr_code", ["qrCode"]),
 
+  // Announcements
+  announcements: defineTable({
+    title: v.string(),
+    message: v.string(),
+    targetType: v.union(
+      v.literal("all"),
+      v.literal("organisers"),
+      v.literal("students"),
+      v.literal("event_attendees")
+    ),
+    targetEventId: v.optional(v.id("events")),
+    priority: v.union(
+      v.literal("low"),
+      v.literal("normal"),
+      v.literal("high"),
+      v.literal("urgent")
+    ),
+    createdBy: v.id("users"),
+    creatorName: v.string(),
+    createdAt: v.number(),
+  }).index("by_created", ["createdAt"]),
+
+  // Assets (media gallery metadata)
+  assets: defineTable({
+    url: v.string(),
+    title: v.string(),
+    category: v.union(
+      v.literal("hero_slider"),
+      v.literal("event_cover"),
+      v.literal("logo"),
+      v.literal("gallery")
+    ),
+    uploadedBy: v.id("users"),
+    uploaderName: v.string(),
+    createdAt: v.number(),
+  }).index("by_category", ["category"])
+    .index("by_created", ["createdAt"]),
+
+  // Platform settings (key-value store)
+  settings: defineTable({
+    key: v.string(),
+    value: v.string(),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  }).index("by_key", ["key"]),
+
   // Event Audit Log (tracks SuperAdmin edits and approval actions)
   eventAuditLog: defineTable({
     eventId: v.id("events"),

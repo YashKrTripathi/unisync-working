@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarPlus,
-  Compass,
   LayoutDashboard,
   Menu,
   Sparkles,
@@ -49,25 +48,27 @@ function useScrolled(threshold = 24) {
   return scrolled;
 }
 
+function LogoMark() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 6L16 2L26 6L26 20L16 30L6 20Z" fill="#0288D1" fillOpacity="0.9" />
+      <path d="M6 6L16 16L6 20Z" fill="#43A047" fillOpacity="0.85" />
+      <path d="M26 6L16 16L26 20Z" fill="#F9A825" fillOpacity="0.85" />
+      <path d="M16 16L6 20L16 30L26 20Z" fill="#1B3064" fillOpacity="0.9" />
+      <circle cx="16" cy="12" r="3" fill="white" fillOpacity="0.95" />
+    </svg>
+  );
+}
+
 function Logo() {
   return (
-    <Link href="/" className="group relative z-10 flex items-center gap-3">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-br from-blue-500/90 to-[#102347] text-white shadow-[0_18px_35px_rgba(26,89,191,0.38)]">
-        <span className="font-display text-sm font-bold tracking-[0.28em]">UN</span>
+    <Link href="/" className="group relative z-10 flex items-center gap-2.5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[#0a1528] shadow-lg">
+        <LogoMark />
       </div>
-      <div className="hidden min-w-0 sm:block">
-        <div className="flex items-center gap-2">
-          <span className="font-display text-xl font-semibold tracking-[-0.06em] text-white">
-            UniSync
-          </span>
-          <span className="rounded-full border border-dypiu-gold/20 bg-dypiu-gold/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.28em] text-dypiu-gold-light">
-            DYPIU
-          </span>
-        </div>
-        <p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">
-          Campus Event Operating System
-        </p>
-      </div>
+      <span className="hidden font-display text-xl font-bold tracking-tight text-white sm:block">
+        UniSync
+      </span>
     </Link>
   );
 }
@@ -105,7 +106,7 @@ function MobileMenu({ open, setOpen, pathname, adminCheck }) {
 
   return (
     <div className="px-4 pt-3 sm:px-6 lg:hidden">
-      <div className="premium-surface mx-auto max-w-7xl overflow-hidden rounded-[1.75rem] p-4">
+      <div className="premium-surface mx-auto max-w-7xl overflow-hidden rounded-2xl p-4">
         <div className="space-y-2">
           {primaryNav.map((item) => (
             <NavLink
@@ -126,11 +127,11 @@ function MobileMenu({ open, setOpen, pathname, adminCheck }) {
                 <Link
                   href="/create-event"
                   onClick={() => setOpen(false)}
-                  className="premium-card flex items-center justify-between rounded-[1.35rem] px-4 py-4"
+                  className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3"
                 >
                   <div>
                     <p className="text-sm font-semibold text-white">Create Event</p>
-                    <p className="text-xs text-slate-400">Launch a polished new listing.</p>
+                    <p className="text-xs text-slate-400">Launch a new event listing.</p>
                   </div>
                   <CalendarPlus className="h-5 w-5 text-blue-300" />
                 </Link>
@@ -139,31 +140,18 @@ function MobileMenu({ open, setOpen, pathname, adminCheck }) {
                 <Link
                   href="/admin"
                   onClick={() => setOpen(false)}
-                  className="premium-card flex items-center justify-between rounded-[1.35rem] px-4 py-4"
+                  className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3"
                 >
                   <div>
                     <p className="text-sm font-semibold text-white">Dashboard</p>
                     <p className="text-xs text-slate-400">Track registrations and reports.</p>
                   </div>
-                  <LayoutDashboard className="h-5 w-5 text-dypiu-gold-light" />
+                  <LayoutDashboard className="h-5 w-5 text-amber-300" />
                 </Link>
               )}
             </div>
           </>
         )}
-
-        <div className="soft-divider my-4" />
-        <div className="flex items-center gap-3 rounded-[1.35rem] border border-white/8 bg-white/4 px-4 py-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-300">
-            <Compass className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-white">Designed for event momentum</p>
-            <p className="text-xs text-slate-400">
-              Clear discovery, faster check-ins, and cleaner operations.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -180,7 +168,7 @@ function HeaderFrame({ adminCheck, rightContent, showLoadingLine = false }) {
     <nav className="fixed inset-x-0 top-0 z-50">
       <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6">
         <div
-          className={`relative rounded-[1.9rem] px-4 py-3 sm:px-5 ${
+          className={`relative rounded-2xl px-4 py-3 transition-all duration-300 sm:px-5 ${
             useSolidShell
               ? "premium-surface glow-border"
               : "border border-white/10 bg-[#091424]/62 backdrop-blur-2xl"
@@ -196,7 +184,7 @@ function HeaderFrame({ adminCheck, rightContent, showLoadingLine = false }) {
                   variant="ghost"
                   size="sm"
                   asChild
-                  className="hidden rounded-full px-4 text-dypiu-gold-light hover:bg-dypiu-gold/10 hover:text-dypiu-gold-light lg:inline-flex"
+                  className="hidden rounded-full px-4 text-brand-orange hover:bg-brand-orange/10 hover:text-brand-orange-light lg:inline-flex"
                 >
                   <Link href="/admin">
                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -208,7 +196,7 @@ function HeaderFrame({ adminCheck, rightContent, showLoadingLine = false }) {
               {rightContent}
 
               <button
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 lg:hidden"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 lg:hidden"
                 onClick={() => setMobileMenuOpen((open) => !open)}
                 aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               >
@@ -219,7 +207,7 @@ function HeaderFrame({ adminCheck, rightContent, showLoadingLine = false }) {
 
           {showLoadingLine && (
             <div className="absolute inset-x-4 bottom-0 overflow-hidden rounded-full">
-              <BarLoader width="100%" height={2} color="#61a6ff" speedMultiplier={0.8} />
+              <BarLoader width="100%" height={2} color="#29B6F6" speedMultiplier={0.8} />
             </div>
           )}
         </div>
@@ -247,7 +235,7 @@ function MockHeader() {
             <Button
               size="sm"
               asChild
-              className="hidden rounded-full bg-primary px-5 text-primary-foreground shadow-[0_18px_35px_rgba(44,126,248,0.3)] hover:scale-[1.02] hover:bg-primary/90 sm:inline-flex"
+              className="hidden rounded-full bg-sky-600 px-5 text-white shadow-[0_18px_35px_rgba(2,136,209,0.3)] hover:bg-sky-700 sm:inline-flex"
             >
               <Link href="/create-event">
                 <CalendarPlus className="mr-2 h-4 w-4" />
@@ -255,10 +243,6 @@ function MockHeader() {
               </Link>
             </Button>
           )}
-
-          <div className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-slate-300 sm:block">
-            {adminCheck?.role === "organiser" ? "Organizer Mode" : "Student Mode"}
-          </div>
         </>
       }
     />
@@ -282,7 +266,7 @@ function AuthHeader() {
                 <Button
                   size="sm"
                   asChild
-                  className="hidden rounded-full bg-primary px-5 text-primary-foreground shadow-[0_18px_35px_rgba(44,126,248,0.3)] hover:scale-[1.02] hover:bg-primary/90 sm:inline-flex"
+                  className="hidden rounded-full bg-sky-600 px-5 text-white shadow-[0_18px_35px_rgba(2,136,209,0.3)] hover:bg-sky-700 sm:inline-flex"
                 >
                   <Link href="/create-event">
                     <CalendarPlus className="mr-2 h-4 w-4" />
@@ -291,12 +275,12 @@ function AuthHeader() {
                 </Button>
               )}
 
-              <div className="hidden rounded-full border border-white/10 bg-white/5 p-1 shadow-[0_12px_30px_rgba(2,8,20,0.22)] sm:block">
+              <div className="hidden rounded-full border border-white/10 bg-white/5 p-1 shadow-lg sm:block">
                 <UserButton
                   afterSignOutUrl="/"
                   appearance={{
                     elements: {
-                      avatarBox: "w-10 h-10",
+                      avatarBox: "w-9 h-9",
                       userButtonPopoverFooter: "hidden",
                     },
                   }}
@@ -322,9 +306,9 @@ function AuthHeader() {
               <SignInButton mode="modal">
                 <Button
                   size="sm"
-                  className="rounded-full bg-primary px-5 text-primary-foreground shadow-[0_18px_35px_rgba(44,126,248,0.3)] hover:scale-[1.02] hover:bg-primary/90"
+                  className="rounded-full bg-sky-600 px-5 text-white shadow-[0_18px_35px_rgba(2,136,209,0.3)] hover:bg-sky-700"
                 >
-                  <Sparkles className="mr-2 h-4 w-4 text-dypiu-gold-light" />
+                  <Sparkles className="mr-2 h-4 w-4" />
                   Sign In
                 </Button>
               </SignInButton>
