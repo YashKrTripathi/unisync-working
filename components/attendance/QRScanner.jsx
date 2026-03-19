@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Camera, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMutation } from "convex/react";
+import { useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
 
 export default function QRScanner() {
@@ -12,7 +12,7 @@ export default function QRScanner() {
     const [error, setError] = useState(null);
     const scannerRef = useRef(null);
     const html5QrCodeRef = useRef(null);
-    const markAttendanceByEventCode = useMutation(
+    const { mutate: markAttendanceByEventCode } = useConvexMutation(
         api.registrations.markAttendanceByEventCode
     );
 

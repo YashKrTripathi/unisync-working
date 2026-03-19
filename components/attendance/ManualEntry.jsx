@@ -3,14 +3,14 @@
 import React, { useState } from "react";
 import { Hash, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMutation } from "convex/react";
+import { useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
 
 export default function ManualEntry() {
     const [eventCode, setEventCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
-    const markAttendanceByEventCode = useMutation(
+    const { mutate: markAttendanceByEventCode } = useConvexMutation(
         api.registrations.markAttendanceByEventCode
     );
 
