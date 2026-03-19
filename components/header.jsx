@@ -68,7 +68,20 @@ function DesktopNav() {
   );
 }
 
-function AuthAction() {
+function AuthAction({ useClerk = false }) {
+  if (!useClerk) {
+    return (
+      <div className="hidden items-center xl:flex">
+        <Link
+          href="/sign-in"
+          className="rounded-full bg-[#ef8a4a] px-4 py-1.5 text-[14px] font-semibold text-black transition-colors hover:bg-[#f29a63]"
+        >
+          Sign In
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="hidden items-center xl:flex">
       <SignedIn>
@@ -107,7 +120,7 @@ function MobileMenuToggle({ open, setOpen }) {
   );
 }
 
-function MobileMenu({ open, setOpen }) {
+function MobileMenu({ open, setOpen, useClerk = false }) {
   if (!open) return null;
 
   return (
@@ -124,31 +137,43 @@ function MobileMenu({ open, setOpen }) {
           </Link>
         ))}
         <div className="pt-3">
-          <SignedIn>
-            <div className="flex justify-center">
-              <div className="rounded-full ring-2 ring-white/20">
-                <UserButton
-                  afterSignOutUrl="/"
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-10 h-10",
-                      userButtonPopoverFooter: "hidden",
-                    },
-                  }}
-                />
-              </div>
-            </div>
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button
-                className="w-full rounded-2xl bg-[#ef8a4a] px-4 py-3 text-center font-semibold text-black transition-colors hover:bg-[#f29a63]"
-                onClick={() => setOpen(false)}
-              >
-                Sign In
-              </button>
-            </SignInButton>
-          </SignedOut>
+          {useClerk ? (
+            <>
+              <SignedIn>
+                <div className="flex justify-center">
+                  <div className="rounded-full ring-2 ring-white/20">
+                    <UserButton
+                      afterSignOutUrl="/"
+                      appearance={{
+                        elements: {
+                          avatarBox: "w-10 h-10",
+                          userButtonPopoverFooter: "hidden",
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button
+                    className="w-full rounded-2xl bg-[#ef8a4a] px-4 py-3 text-center font-semibold text-black transition-colors hover:bg-[#f29a63]"
+                    onClick={() => setOpen(false)}
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
+            </>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="block w-full rounded-2xl bg-[#ef8a4a] px-4 py-3 text-center font-semibold text-black transition-colors hover:bg-[#f29a63]"
+              onClick={() => setOpen(false)}
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       </div>
     </div>
@@ -176,6 +201,7 @@ function HeaderFrame({
   setMobileMenuOpen,
   rightContent,
   loadingBar,
+  useClerk = false,
 }) {
   return (
     <div className="fixed left-0 right-0 top-0 z-50 px-4 pt-3 md:px-6">
@@ -208,7 +234,7 @@ function HeaderFrame({
         ) : null}
       </nav>
 
-      <MobileMenu open={mobileMenuOpen} setOpen={setMobileMenuOpen} />
+      <MobileMenu open={mobileMenuOpen} setOpen={setMobileMenuOpen} useClerk={useClerk} />
     </div>
   );
 }
@@ -222,8 +248,9 @@ function MockHeader() {
       scrolled={scrolled}
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
-      rightContent={<AuthAction />}
+      rightContent={<AuthAction useClerk={false} />}
       loadingBar={false}
+      useClerk={false}
     />
   );
 }
@@ -239,7 +266,8 @@ function AuthHeader() {
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
       loadingBar={isLoading}
-      rightContent={<AuthAction />}
+      rightContent={<AuthAction useClerk={true} />}
+      useClerk={true}
     />
   );
 }
