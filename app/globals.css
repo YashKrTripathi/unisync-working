@@ -245,6 +245,26 @@
   }
 }
 
+@keyframes dock-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.9);
+    filter: blur(10px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.02);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out forwards;
 }
@@ -419,4 +439,17 @@ body.is-not-found main>div:first-of-type canvas {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Desktop custom scrollbar replaces the native scrollbar */
+@media (min-width: 1024px) {
+  html {
+    scrollbar-width: none;
+  }
+
+  body::-webkit-scrollbar,
+  html::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }

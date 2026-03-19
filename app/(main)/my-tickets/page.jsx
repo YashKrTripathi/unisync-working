@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Calendar, MapPin, Loader2, Ticket } from "lucide-react";
+import { Calendar, MapPin, Loader2, House } from "lucide-react";
 import { useConvexQuery, useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
@@ -120,8 +120,8 @@ export default function MyTicketsPage() {
                 Register for events to see your tickets here
               </p>
               <Button asChild className="gap-2">
-                <Link href="/explore">
-                  <Ticket className="w-4 h-4" /> Browse Events
+                <Link href="/">
+                  <House className="w-4 h-4" /> Go Home
                 </Link>
               </Button>
             </div>

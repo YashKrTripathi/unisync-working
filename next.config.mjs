@@ -9,6 +9,7 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  devIndicators: false,
   images: {
     remotePatterns: [
       {

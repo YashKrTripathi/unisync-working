@@ -8,7 +8,6 @@ import { State, City } from "country-state-city";
 import { format } from "date-fns";
 import { useConvexQuery, useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
-import { createLocationSlug } from "@/lib/location-utils";
 import { getCategoryIcon } from "@/lib/data";
 
 import { Input } from "@/components/ui/input";
@@ -94,8 +93,7 @@ export default function SearchLocationBar() {
           interests: currentUser.interests,
         });
       }
-      const slug = createLocationSlug(city, state);
-      router.push(`/explore/${slug}`);
+      router.push("/");
     } catch (error) {
       console.error("Failed to update location:", error);
     }

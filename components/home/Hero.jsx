@@ -1,203 +1,106 @@
 "use client";
 
-import React, { useRef, useState, useCallback, useEffect } from "react";
-import { useScrollY } from "@/hooks/use-scroll-y";
+import React from "react";
+import { SignIn, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+
+const heroStats = [
+  { value: "45+", label: "Active Clubs" },
+  { value: "200+", label: "Annual Events" },
+  { value: "12k+", label: "Students" },
+];
 
 export default function Hero() {
-    const textRef = useRef(null);
-    const [tilt, setTilt] = useState({ x: 0, skew: 0 });
-    const [isHovered, setIsHovered] = useState(false);
-    const rafRef = useRef(null);
+  return (
+    <section className="relative min-h-screen overflow-hidden bg-[#0e0d0d]">
+      <img
+        src="/hero-background.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover grayscale"
+      />
+      <div className="absolute inset-0 bg-[#0b0a0a]/78" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,8,0.9)_0%,rgba(14,12,12,0.72)_42%,rgba(13,12,12,0.6)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,173,115,0.09),transparent_38%)]" />
 
-    // ── Scroll-driven values ──────────────────────────────────────
-    const scrollY = useScrollY();
-    const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-    const p = Math.min(Math.max(scrollY / (vh * 0.75), 0), 1);
-    const scrollScale   = 1 + p * 1.1;
-    const scrollBlur    = p * 38;
-    const scrollOpacity = Math.max(0, 1 - p * 2.2);
-    const bgParallaxY   = scrollY * -0.28;
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1600px] items-center px-5 pb-16 pt-36 md:px-8 lg:px-12 xl:px-16">
+        <div className="grid w-full items-center gap-12 xl:gap-20 lg:grid-cols-[minmax(0,1fr)_460px]">
+          <div className="min-w-0 max-w-[700px]">
+            <div className="mb-8 inline-flex items-center rounded-sm bg-[#a24c23] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#ffd1b4]">
+              Official Portal
+            </div>
 
-    // ── Mouse / touch tilt ───────────────────────────────────────
-    const handleMouseMove = useCallback((e) => {
-        if (!textRef.current) return;
-        const rect = textRef.current.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const offsetX = (e.clientX - centerX) / (rect.width / 2);
-        const targetX = offsetX * 24;
-        const targetSkew = offsetX * -3;
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(() => {
-            setTilt(prev => ({
-                x: prev.x + (targetX - prev.x) * 0.1,
-                skew: prev.skew + (targetSkew - prev.skew) * 0.1,
-            }));
-        });
-    }, []);
+            <h1 className="font-sans text-[clamp(4.3rem,8vw,7.4rem)] font-black uppercase leading-[0.88] tracking-[-0.07em] text-[#ffb18a]">
+              <span className="block text-white">D Y Patil</span>
+              <span className="block">International</span>
+              <span className="block">University</span>
+            </h1>
 
-    const handleMouseLeave = useCallback(() => {
-        setIsHovered(false);
-        const ease = () => {
-            setTilt(prev => {
-                const nx = prev.x * 0.88;
-                const ns = prev.skew * 0.88;
-                if (Math.abs(nx) > 0.1 || Math.abs(ns) > 0.01)
-                    rafRef.current = requestAnimationFrame(ease);
-                return { x: nx, skew: ns };
-            });
-        };
-        rafRef.current = requestAnimationFrame(ease);
-    }, []);
+            <p className="mt-8 max-w-[620px] text-[clamp(1rem,1.45vw,1.35rem)] leading-[1.75] text-[#f3ba9b]">
+              The Pulse of Campus Life. Centralizing event coordination,
+              venue booking, and student engagement in one seamless
+              ecosystem.
+            </p>
 
-    const handleTouchMove = useCallback((e) => {
-        if (e.touches[0]) handleMouseMove(e.touches[0]);
-    }, [handleMouseMove]);
+            <div className="mt-12 grid max-w-[620px] grid-cols-3 gap-6 border-t border-white/10 pt-8">
+              {heroStats.map((stat) => (
+                <div key={stat.label}>
+                  <div className="text-[clamp(1.8rem,3vw,2.5rem)] font-black leading-none text-[#ff9a63]">
+                    {stat.value}
+                  </div>
+                  <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#f2b797]">
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-    return (
-        <section
-            className="relative w-full overflow-hidden bg-[#120204]"
-            style={{ height: "100vh" }}
-        >
-            {/* ── Base colour ─── */}
-            <div className="absolute inset-0 z-0 bg-[#120204]" />
-
-            {/* ── Rotating burst image + parallax ─── */}
-            <div
-                className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none"
-                style={{ transform: `translateY(${bgParallaxY}px)` }}
-            >
-                <div style={{
-                    width: "140vmax", height: "140vmax",
-                    animation: "heroBurstSpin 40s linear infinite",
-                    willChange: "transform",
-                }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src="/hero-burst.png"
-                        alt=""
-                        aria-hidden="true"
-                        style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 1 }}
+          <div className="flex justify-center lg:justify-end">
+            <div className="w-full max-w-[440px] rounded-[2px] bg-[#161312]/92 p-4 shadow-[0_20px_70px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-5">
+              <div className="bg-[#1a1614] p-4 sm:p-5">
+                <SignedOut>
+                  <div className="[&_.cl-rootBox]:w-full [&_.cl-card]:w-full [&_.cl-card]:max-w-none [&_.cl-card]:border-0 [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-headerTitle]:text-white [&_.cl-headerTitle]:text-[2rem] [&_.cl-headerTitle]:tracking-[-0.04em] [&_.cl-headerSubtitle]:text-[#b19b90] [&_.cl-socialButtonsBlockButton]:border-0 [&_.cl-socialButtonsBlockButton]:bg-[#211c19] [&_.cl-socialButtonsBlockButton]:text-white [&_.cl-socialButtonsBlockButton]:shadow-none [&_.cl-socialButtonsBlockButton]:hover:bg-[#2b2522] [&_.cl-dividerLine]:bg-[#2d2927] [&_.cl-dividerText]:text-[#8f7d73] [&_.cl-formFieldLabel]:text-[#8f7d73] [&_.cl-formFieldLabel]:uppercase [&_.cl-formFieldLabel]:tracking-[0.16em] [&_.cl-formFieldLabel]:text-[11px] [&_.cl-formFieldInput]:h-14 [&_.cl-formFieldInput]:border-0 [&_.cl-formFieldInput]:bg-[#2b2725] [&_.cl-formFieldInput]:text-white [&_.cl-formFieldInput]:placeholder:text-[#786c66] [&_.cl-formFieldInput]:shadow-none [&_.cl-formFieldInput]:focus:border-0 [&_.cl-formFieldInput]:focus:ring-0 [&_.cl-footerActionText]:text-[#8d7b72] [&_.cl-footerActionLink]:text-[#ef8a4a] [&_.cl-footerActionLink]:hover:text-[#ffb28f] [&_.cl-formButtonPrimary]:h-14 [&_.cl-formButtonPrimary]:border-0 [&_.cl-formButtonPrimary]:bg-[linear-gradient(90deg,#ffb28f_0%,#ff7f1d_100%)] [&_.cl-formButtonPrimary]:text-[#25160e] [&_.cl-formButtonPrimary]:text-[13px] [&_.cl-formButtonPrimary]:font-black [&_.cl-formButtonPrimary]:uppercase [&_.cl-formButtonPrimary]:tracking-[0.12em] [&_.cl-formButtonPrimary]:shadow-none [&_.cl-formButtonPrimary]:hover:bg-[linear-gradient(90deg,#ffc0a2_0%,#ff8d39_100%)]">
+                    <SignIn
+                      routing="hash"
+                      signUpUrl="/sign-up"
+                      fallbackRedirectUrl="/admin"
                     />
-                </div>
-            </div>
+                  </div>
+                </SignedOut>
 
-            {/* ── Grain ─── */}
-            <div className="absolute inset-0 z-[2] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-overlay pointer-events-none" />
-
-            {/* ── Vignettes ─── */}
-            <div className="absolute top-0 left-0 right-0 z-[3] pointer-events-none"
-                style={{ height: "90px", background: "linear-gradient(to bottom, rgba(0,0,0,0.65), transparent)" }} />
-            <div className="absolute bottom-0 left-0 right-0 z-[3] pointer-events-none"
-                style={{ height: "140px", background: "linear-gradient(to top, rgba(0,0,0,0.65), transparent)" }} />
-
-            {/* ── Glow blob ─── */}
-            <div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[4] pointer-events-none"
-                style={{
-                    width: "80vw", height: "55vh",
-                    background: "radial-gradient(ellipse at center, rgba(255,255,255,0.18) 0%, rgba(255,200,80,0.08) 40%, transparent 75%)",
-                    filter: "blur(32px)",
-                    borderRadius: "50%",
-                }}
-            />
-
-            {/* ── SCROLL ZOOM + BLUR (Nameless signature effect) ─── */}
-            <div
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    zIndex: 10,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    paddingTop: "80px",
-                    paddingBottom: "88px",
-                    transform: `scale(${scrollScale})`,
-                    filter: `blur(${scrollBlur}px)`,
-                    opacity: scrollOpacity,
-                    transformOrigin: "center center",
-                    willChange: "transform, filter, opacity",
-                    pointerEvents: scrollOpacity < 0.1 ? "none" : "auto",
-                }}
-            >
-                {/* ── Tilt / hover layer ─── */}
-                <div
-                    ref={textRef}
-                    className="flex flex-col items-center select-none cursor-default"
-                    style={{ paddingTop: "36px" }}
-                    onMouseMove={(e) => { setIsHovered(true); handleMouseMove(e); }}
-                    onMouseLeave={handleMouseLeave}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleMouseLeave}
-                >
-                    {/* UNISYNC */}
-                    <h1
-                        style={{
-                            fontSize: "clamp(72px, min(23vw, 40vh), 420px)",
-                            lineHeight: 0.85,
-                            fontFamily: "var(--font-anton), sans-serif",
-                            fontWeight: 900,
-                            letterSpacing: "-0.03em",
-                            textTransform: "uppercase",
-                            color: "white",
-                            textAlign: "center",
-                            textShadow: isHovered
-                                ? [
-                                    `${tilt.x * 0.5}px 0 40px rgba(255,180,60,0.9)`,
-                                    "0 0 80px rgba(255,255,255,0.6)",
-                                    "0 0 200px rgba(255,255,255,0.2)",
-                                  ].join(", ")
-                                : [
-                                    "0 0 60px rgba(255,255,255,0.75)",
-                                    "0 0 120px rgba(255,200,80,0.45)",
-                                    "0 0 200px rgba(255,255,255,0.2)",
-                                  ].join(", "),
-                            transform: `translateX(${tilt.x}px) skewX(${tilt.skew}deg)`,
-                            transition: isHovered ? "none" : "transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94)",
-                            animation: "heroIdle 7s ease-in-out infinite",
-                            willChange: "transform",
+                <SignedIn>
+                  <div className="flex min-h-[520px] flex-col items-center justify-center px-6 py-10 text-center">
+                    <div className="mb-6 rounded-full ring-2 ring-white/20">
+                      <UserButton
+                        afterSignOutUrl="/"
+                        appearance={{
+                          elements: {
+                            avatarBox: "w-20 h-20",
+                            userButtonPopoverFooter: "hidden",
+                          },
                         }}
-                    >
-                        UNISYNC
-                    </h1>
-
-                    {/* D.Y.P.I.U , PUNE */}
-                    <div
-                        className="mt-4"
-                        style={{
-                            transform: `translateX(${-tilt.x * 0.55}px) skewX(${-tilt.skew * 0.45}deg)`,
-                            transition: isHovered ? "none" : "transform 0.9s cubic-bezier(0.25,0.46,0.45,0.94)",
-                            textShadow: isHovered
-                                ? `${-tilt.x * 0.35}px 0 32px rgba(255,120,60,0.55)`
-                                : "0 2px 20px rgba(255,120,60,0.45)",
-                        }}
-                    >
-                        <span style={{
-                            fontFamily: "var(--font-playfair), Georgia, serif",
-                            fontStyle: "italic",
-                            fontSize: "clamp(28px, min(7.5vw, 12vh), 100px)",
-                            color: "rgba(255,255,255,0.90)",
-                            letterSpacing: "0.01em",
-                        }}>
-                            D.Y.P.I.U , PUNE
-                        </span>
+                      />
                     </div>
-                </div>
+                    <h2 className="text-[2rem] font-bold tracking-[-0.04em] text-white">
+                      Authentication Active
+                    </h2>
+                    <p className="mt-3 max-w-[280px] text-sm leading-relaxed text-[#b19b90]">
+                      Your account is signed in with Clerk. Continue to the dashboard
+                      or manage your session from the profile menu.
+                    </p>
+                    <a
+                      href="/admin"
+                      className="mt-8 flex h-14 w-full max-w-[300px] items-center justify-center bg-gradient-to-r from-[#ffb28f] to-[#ff7f1d] text-[13px] font-black uppercase tracking-[0.12em] text-[#25160e] transition-transform duration-300 hover:scale-[1.01]"
+                    >
+                      Continue to Admin
+                    </a>
+                  </div>
+                </SignedIn>
+              </div>
             </div>
-
-            {/* ── Keyframes ─── */}
-            <style>{`
-                @keyframes heroBurstSpin {
-                    from { transform: rotate(0deg); }
-                    to   { transform: rotate(360deg); }
-                }
-                @keyframes heroIdle {
-                    0%, 100% { transform: translateX(0px)  skewX(0deg); }
-                    30%      { transform: translateX(-7px) skewX(0.25deg); }
-                    70%      { transform: translateX(7px)  skewX(-0.25deg); }
-                }
-            `}</style>
-        </section>
-    );
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

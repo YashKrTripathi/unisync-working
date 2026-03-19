@@ -3,19 +3,16 @@
 import { usePathname } from "next/navigation";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import FloatingBar from "@/components/floating-bar";
 
 /**
- * PublicShell — renders the public-facing Header, Footer, and FloatingBar
- * only on non-admin routes.  Admin pages get none of these — they have their
- * own standalone sidebar layout.
+ * PublicShell renders the public-facing Header and Footer
+ * only on non-admin routes. Admin pages use their own layout.
  */
 export default function PublicShell({ children }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
 
   if (isAdmin) {
-    // Admin portal: no header, no footer, no floating bar — just the page
     return <>{children}</>;
   }
 
@@ -30,7 +27,6 @@ export default function PublicShell({ children }) {
           <Footer />
         </div>
       </main>
-      <FloatingBar />
     </>
   );
 }

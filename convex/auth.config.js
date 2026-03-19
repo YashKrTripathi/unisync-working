@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: "https://adjusted-cougar-32.clerk.accounts.dev",
+      domain: "https://wanted-camel-97.clerk.accounts.dev",
       applicationID: "convex",
     },
   ],

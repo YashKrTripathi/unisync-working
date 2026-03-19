@@ -13,7 +13,7 @@ const Footer = () => {
           {/* Left Column */}
           <div className="space-y-6 text-[15px] font-sans font-medium text-white/90">
             <p className="leading-snug">
-              UniSync Festival | DYPIU EventHub<br />
+              UniSync Events | DYPIU EventHub<br />
               © All Rights Reserved
             </p>
             <p className="leading-snug">
