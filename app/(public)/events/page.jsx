@@ -1,16 +1,10 @@
-"use client";
+﻿"use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { format } from "date-fns";
-import {
-  Calendar,
-  MapPin,
-  Users,
-  ArrowRight,
-  Archive,
-  Sparkles,
-} from "lucide-react";
+import { Calendar, MapPin, Users, Sparkles, ArrowRight, CircleDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getCategoryIcon, getCategoryLabel } from "@/lib/data";
 import { useConvexQuery } from "@/hooks/use-convex-query";
@@ -18,289 +12,218 @@ import { api } from "@/convex/_generated/api";
 
 const now = Date.now();
 
-const mockUpcomingEvents = [
-  {
-    _id: "mock-upcoming-1",
-    slug: "unisync-innovators-summit",
-    title: "Innovators Summit",
-    description:
-      "A campus-scale showcase of founders, student makers, and future-facing product demos.",
-    startDate: now + 1000 * 60 * 60 * 24 * 7,
-    endDate: now + 1000 * 60 * 60 * 24 * 8,
-    city: "Pune",
-    venue: "Innovation Dome",
-    registrationCount: 420,
-    capacity: 700,
-    category: "technology",
-    themeColor: "#1546ff",
-  },
-  {
-    _id: "mock-upcoming-2",
-    slug: "unisync-cultural-eve",
-    title: "Cultural Eve",
-    description:
-      "Music, movement, and storytelling brought together in one high-energy student celebration.",
-    startDate: now + 1000 * 60 * 60 * 24 * 12,
-    endDate: now + 1000 * 60 * 60 * 24 * 12.5,
-    city: "Pune",
-    venue: "Open Air Arena",
-    registrationCount: 680,
-    capacity: 1200,
-    category: "cultural",
-    themeColor: "#ff5a1f",
-  },
-  {
-    _id: "mock-upcoming-3",
-    slug: "unisync-design-week",
-    title: "Design Week",
-    description:
-      "Immersive workshops, installations, and critiques built around bold campus creativity.",
-    startDate: now + 1000 * 60 * 60 * 24 * 18,
-    endDate: now + 1000 * 60 * 60 * 24 * 20,
-    city: "Pune",
-    venue: "Studio Block",
-    registrationCount: 250,
-    capacity: 500,
-    category: "art",
-    themeColor: "#8b2cf5",
-  },
-  {
-    _id: "mock-upcoming-4",
-    slug: "unisync-startup-fair",
-    title: "Startup Fair",
-    description:
-      "A curated networking floor for startups, recruiters, and ambitious student teams.",
-    startDate: now + 1000 * 60 * 60 * 24 * 25,
-    endDate: now + 1000 * 60 * 60 * 24 * 25.5,
-    city: "Pune",
-    venue: "Central Hall",
-    registrationCount: 310,
-    capacity: 650,
-    category: "business",
-    themeColor: "#0c9b6c",
-  },
-];
-
-const mockPastEvents = [
-  {
-    _id: "mock-past-1",
-    slug: "unisync-tech-conclave-2025",
-    title: "Tech Conclave",
-    description:
-      "A packed auditorium, keynote sessions, and collaborative showcases across emerging technologies.",
-    startDate: now - 1000 * 60 * 60 * 24 * 40,
-    endDate: now - 1000 * 60 * 60 * 24 * 39,
-    city: "Pune",
-    venue: "Main Convention Hall",
-    registrationCount: 540,
-    attendeeCount: 486,
-    category: "technology",
-    themeColor: "#1d4ed8",
-  },
-  {
-    _id: "mock-past-2",
-    slug: "unisync-rhythm-night-2025",
-    title: "Rhythm Night",
-    description:
-      "A vibrant music and dance night that turned the campus into a full-performance stage.",
-    startDate: now - 1000 * 60 * 60 * 24 * 58,
-    endDate: now - 1000 * 60 * 60 * 24 * 57,
-    city: "Pune",
-    venue: "Festival Courtyard",
-    registrationCount: 860,
-    attendeeCount: 792,
-    category: "music",
-    themeColor: "#db2777",
-  },
-  {
-    _id: "mock-past-3",
-    slug: "unisync-maker-expo-2025",
-    title: "Maker Expo",
-    description:
-      "Prototype booths, engineering builds, and a full day of hands-on student innovation.",
-    startDate: now - 1000 * 60 * 60 * 24 * 75,
-    endDate: now - 1000 * 60 * 60 * 24 * 74,
-    city: "Pune",
-    venue: "Engineering Atrium",
-    registrationCount: 390,
-    attendeeCount: 342,
-    category: "technology",
-    themeColor: "#0891b2",
-  },
-  {
-    _id: "mock-past-4",
-    slug: "unisync-campus-awards-2025",
-    title: "Campus Awards",
-    description:
-      "A polished celebration of standout student work, performances, and campus leadership.",
-    startDate: now - 1000 * 60 * 60 * 24 * 96,
-    endDate: now - 1000 * 60 * 60 * 24 * 95,
-    city: "Pune",
-    venue: "Grand Auditorium",
-    registrationCount: 470,
-    attendeeCount: 418,
-    category: "cultural",
-    themeColor: "#f97316",
-  },
-];
-
-function mergeEvents(primary, fallback, type) {
-  const filteredPrimary = primary.filter((event) => {
-    const eventTime = event.endDate || event.startDate;
-    return type === "past" ? eventTime < now : event.startDate > now;
-  });
-
-  const seen = new Set();
-  const merged = [...filteredPrimary, ...fallback].filter((event) => {
-    const key = event.slug || event._id;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-
-  return merged.slice(0, 8);
+function computeStatus(event) {
+  if (!event) return { label: "Unknown", tone: "border-white/15 text-white/70 bg-white/10" };
+  const referenceDate = event.endDate || event.startDate;
+  if (event.startDate <= now && referenceDate >= now) {
+    return { label: "Live", tone: "border-emerald-400/40 text-emerald-100 bg-emerald-500/10" };
+  }
+  if (event.startDate > now) {
+    return { label: "Upcoming", tone: "border-sky-400/40 text-sky-100 bg-sky-500/10" };
+  }
+  return { label: "Past", tone: "border-white/20 text-white/70 bg-white/5" };
 }
 
-function EventCard({ event, variant = "upcoming" }) {
-  const isPast = variant === "past";
+function filterEvents(events = [], type) {
+  return events
+    .filter((event) => {
+      if (!event) return false;
+      const referenceDate = event.endDate || event.startDate;
+      if (type === "current") {
+        return event.startDate <= now && referenceDate >= now;
+      }
+      if (type === "upcoming") {
+        return event.startDate > now;
+      }
+      return false;
+    })
+    .slice(0, 6);
+}
 
+function EventCard({ event, variant }) {
+  const status = computeStatus(event);
   return (
-    <Link href={`/events/${event.slug}`} className="group block h-full">
-      <article className="flex h-full flex-col overflow-hidden rounded-[32px] border border-white/12 bg-black/70 transition-all duration-500 hover:-translate-y-2 hover:border-white/22 hover:bg-white/[0.05]">
-        <div
-          className="relative flex h-56 items-center justify-center overflow-hidden"
-          style={{ backgroundColor: event.themeColor || "#1e3a8a" }}
-        >
-          <div
-            className={`absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent ${
-              isPast ? "grayscale" : ""
-            }`}
+    <Link
+      href={`/events/${event.slug}`}
+      className="group relative flex h-full flex-col overflow-hidden rounded-[30px] border border-white/15 bg-gradient-to-b from-[#161216]/80 to-[#090708]/60 transition-all duration-400 hover:-translate-y-1 hover:border-white/40"
+    >
+      <div className="relative h-48 w-full overflow-hidden">
+        {event.coverImage && (
+          <Image
+            src={event.coverImage}
+            alt={event.title}
+            fill
+            sizes="(max-width: 1024px) 100vw, 33vw"
+            className="object-cover transition duration-500 group-hover:scale-105"
+            priority
           />
-          <span className="relative z-10 text-7xl text-white/70 transition-transform duration-500 group-hover:scale-110">
-            {getCategoryIcon(event.category)}
-          </span>
-          <div className="absolute left-4 top-4 z-20">
-            <Badge className="border border-white/15 bg-black/45 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white backdrop-blur-md">
-              {isPast ? "Past Event" : "Upcoming"}
-            </Badge>
-          </div>
-        </div>
-
-        <div className="flex flex-1 flex-col p-7">
-          <div className="mb-4 inline-flex w-fit rounded-full border border-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-white/70">
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/15 to-black/40" />
+        <div className="absolute left-4 right-4 top-4 flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/80">
+          <span className="rounded-full border border-white/15 bg-black/50 px-3 py-1">
             {getCategoryLabel(event.category)}
-          </div>
-
-          <h3 className="mb-3 font-display text-[clamp(2rem,4vw,3.2rem)] uppercase leading-[0.92] tracking-[-0.05em] text-white transition-colors duration-300 group-hover:text-[var(--color-nameless-orange)]">
+          </span>
+          <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold tracking-[0.25em] ${status.tone}`}>
+            <CircleDot className="h-3 w-3" />
+            {status.label}
+          </span>
+        </div>
+      </div>
+        <div className="flex flex-1 flex-col p-6">
+        <div className="flex items-center gap-3">
+          <h3 className="font-display text-[1.6rem] font-semibold leading-tight tracking-tight text-white">
             {event.title}
           </h3>
-
-          <p className="mb-6 line-clamp-2 text-sm leading-relaxed text-white/62">
-            {event.description}
-          </p>
-
-          <div className="mt-auto space-y-3 text-sm text-white/80">
-            <div className="flex items-center gap-3">
-              <Calendar className="h-4 w-4 text-[var(--color-nameless-orange)]" />
-              <span>{format(event.startDate, "PPP")}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <MapPin className="h-4 w-4 text-[var(--color-nameless-orange)]" />
-              <span className="line-clamp-1">{event.venue || event.city}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Users className="h-4 w-4 text-[var(--color-nameless-orange)]" />
-              <span>
-                {isPast
-                  ? `${event.attendeeCount || event.registrationCount} attended`
-                  : `${event.registrationCount} / ${event.capacity} enrolled`}
-              </span>
-            </div>
+          <span className="rounded-full border border-white/14 bg-white/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-nameless-orange)]">
+            {getCategoryLabel(event.category)}
+          </span>
+        </div>
+        <p className="mt-3 text-base leading-relaxed text-white/82">{event.description}</p>
+        <div className="mt-5 flex flex-col gap-3 text-sm text-white/80">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-[var(--color-nameless-orange)]" />
+            {format(event.startDate, "MMM dd â€¢ h:mm a")}
           </div>
-
-          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors duration-300 group-hover:text-[var(--color-nameless-orange)]">
-            <span>{isPast ? "View Memories" : "View Event"}</span>
-            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-[var(--color-nameless-orange)]" />
+            {event.city}, {event.state || event.country}
+          </div>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-[var(--color-nameless-orange)]" />
+            {event.registrationCount}/{event.capacity} reserved
           </div>
         </div>
-      </article>
+        <div className="mt-auto flex items-center justify-between pt-5 text-white/80">
+          <span className="text-xs">Status: {variant}</span>
+          <ArrowRight className="h-4 w-4 text-white/70 transition-colors duration-300 group-hover:text-[var(--color-nameless-orange)]" />
+        </div>
+      </div>
     </Link>
   );
 }
 
-function SectionHeader({ icon: Icon, eyebrow, title, accent, copy }) {
+function PlaceholderCard({ keyId }) {
   return (
-    <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-      <div>
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70">
-          <Icon className="h-4 w-4 text-[var(--color-nameless-orange)]" />
-          <span>{eyebrow}</span>
-        </div>
-        <h2 className="font-display text-[clamp(3.2rem,8vw,6.5rem)] uppercase leading-[0.88] tracking-[-0.06em] text-white">
-          {title} <span className="text-[var(--color-nameless-orange)]">{accent}</span>
-        </h2>
-      </div>
-      <p className="max-w-xl text-base leading-relaxed text-white/62 md:text-lg">
-        {copy}
-      </p>
+    <div
+      key={keyId}
+      className="animate-pulse rounded-[30px] border border-white/10 bg-gradient-to-b from-white/5 to-black/20 p-6"
+    >
+      <div className="h-12 w-32 rounded-full bg-white/10" />
+      <div className="mt-4 h-6 w-3/4 rounded-full bg-white/10" />
+      <div className="mt-3 h-3 rounded-full bg-white/10" />
+      <div className="mt-2 h-3 rounded-full bg-white/10" />
+      <div className="mt-2 h-3 w-1/2 rounded-full bg-white/10" />
     </div>
   );
 }
 
 export default function EventsPage() {
-  const { data: upcomingEvents = [] } = useConvexQuery(api.explore.getPopularEvents, {
-    limit: 8,
-  });
-  const { data: pastEvents = [] } = useConvexQuery(api.explore.getPastEvents, {
-    limit: 8,
+  const { data: upcomingEvents = [], isLoading: isLoadingUpcoming } = useConvexQuery(
+    api.explore.getPopularEvents,
+    { limit: 12 }
+  );
+  const { data: pastEvents = [], isLoading: isLoadingPast } = useConvexQuery(api.explore.getPastEvents, {
+    limit: 12,
   });
 
-  const upcomingDisplayEvents = useMemo(
-    () => mergeEvents(upcomingEvents, mockUpcomingEvents, "upcoming"),
-    [upcomingEvents]
-  );
-  const pastDisplayEvents = useMemo(
-    () => mergeEvents(pastEvents, mockPastEvents, "past"),
-    [pastEvents]
-  );
+  const liveEvents = useMemo(() => filterEvents(upcomingEvents, "current"), [upcomingEvents]);
+  const futureEvents = useMemo(() => filterEvents(upcomingEvents, "upcoming"), [upcomingEvents]);
+  // Past/completed events already arrive pre-filtered from Convex; avoid re-filtering them out.
+  const archiveEvents = useMemo(() => pastEvents || [], [pastEvents]);
+  const mergedLiveUpcoming = useMemo(() => [...liveEvents, ...futureEvents], [liveEvents, futureEvents]);
+  const allEventsCombined = useMemo(() => [...mergedLiveUpcoming, ...archiveEvents], [mergedLiveUpcoming, archiveEvents]);
+
+  const [view, setView] = useState("active");
+
+  const heroNavigation = [
+    { title: "Ongoing & Upcoming", subtitle: "See what’s live and next", view: "active" },
+    { title: "Past / Completed", subtitle: "Revisit previous showcases", view: "archive" },
+  ];
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black pb-24 pt-32">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,107,0,0.12),transparent_28%),linear-gradient(180deg,#050505_0%,#000_100%)]" />
-
-      <div className="mx-auto max-w-[1600px] px-6">
-        <section className="mb-14 rounded-[40px] border border-white/10 bg-white/[0.02] px-6 py-10 md:px-8 md:py-12">
-          <SectionHeader
-            icon={Sparkles}
-            eyebrow="Upcoming Lineup"
-            title="Upcoming"
-            accent="Events"
-            copy="Fresh launches, campus moments, and the next big experiences students can join right now."
-          />
-
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 2xl:grid-cols-4">
-            {upcomingDisplayEvents.map((event) => (
-              <EventCard key={event._id} event={event} variant="upcoming" />
-            ))}
+    <div className="overflow-hidden bg-[#050304] text-white">
+      <div className="relative">
+        <div className="absolute -top-16 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[#4f46e5]/30 blur-[110px]" />
+        <div className="absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-[#0f172a] via-[#0b0e17] to-transparent" />
+        <div className="relative mx-auto max-w-[1400px] px-6 py-12 lg:py-16">
+          <h1 className="text-5xl font-semibold leading-tight text-white md:text-6xl">UniSync Premium Events</h1>
+          <p className="mt-3 max-w-3xl text-lg text-white/75">
+            Browse the live, upcoming, and premium showcases that define innovation across campus. This curated carousel
+            keeps your focus on whatâ€™s happening now and whatâ€™s next.
+          </p>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {heroNavigation.map((item) => {
+              const isActive = view === item.view;
+              return (
+                <button
+                  key={item.title}
+                  type="button"
+                  onClick={() => setView(item.view)}
+                  className={`group rounded-[26px] border px-6 py-5 text-left transition hover:border-white/50 ${
+                    isActive
+                      ? "border-white/60 bg-gradient-to-br from-white/15 to-black/40"
+                      : "border-white/20 bg-gradient-to-br from-white/5 to-black/30"
+                  }`}
+                >
+                  <p className="text-xs uppercase tracking-[0.4em] text-white/60">{item.subtitle}</p>
+                  <p className="mt-2 text-2xl font-semibold text-white">{item.title}</p>
+                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+                    <Sparkles className={`h-4 w-4 ${isActive ? "text-[var(--color-nameless-orange)]" : ""}`} />
+                    {isActive ? "Showing" : "Explore"}
+                  </div>
+                </button>
+              );
+            })}
           </div>
-        </section>
+        </div>
+      </div>
 
-        <section className="rounded-[40px] border border-white/10 bg-white/[0.02] px-6 py-10 md:px-8 md:py-12">
-          <SectionHeader
-            icon={Archive}
-            eyebrow="Event Archive"
-            title="Past"
-            accent="Events"
-            copy="A quick archive of previous UniSync experiences, completed showcases, and memorable campus highlights."
-          />
+      <div className="relative z-10 mx-auto max-w-[1400px] space-y-16 px-6 pb-20 pt-4">
+            {(() => {
+              const sections = [];
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 2xl:grid-cols-4">
-            {pastDisplayEvents.map((event) => (
-              <EventCard key={event._id} event={event} variant="past" />
-            ))}
-          </div>
-        </section>
+          if (view === "active") {
+            sections.push({ title: "Live + Upcoming", events: mergedLiveUpcoming, loading: isLoadingUpcoming });
+          }
+          if (view === "all") {
+            sections.push({ title: "All Events", events: allEventsCombined, loading: isLoadingUpcoming || isLoadingPast });
+          }
+          if (view === "archive") {
+            sections.push({ title: "Archive", events: archiveEvents, loading: isLoadingPast });
+          }
+
+          return sections.map(({ title, events, loading }) => (
+            <section
+              key={title}
+              className="space-y-6 rounded-[36px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.4em] text-white/50">Curated lineup</p>
+                  <h2 className="text-3xl font-semibold">{title}</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setView("all")}
+                  className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-nameless-orange)] transition hover:text-orange-300"
+                >
+                  Browse all
+                </button>
+              </div>
+              <div className="grid gap-6 lg:grid-cols-3">
+                {(loading ? Array.from({ length: 3 }) : events).map((event, index) =>
+                  event ? (
+                    <EventCard key={event._id} event={event} variant={title} />
+                  ) : (
+                    <PlaceholderCard key={`placeholder-${title}-${index}`} />
+                  )
+                )}
+              </div>
+            </section>
+          ));
+        })()}
       </div>
     </div>
   );
 }
+

@@ -7,6 +7,10 @@ const isBackendEnabled = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 );
 
+// Simple in-memory cache to share Convex query results across pages.
+// Useful for avoiding repeated loading states on client-side navigation.
+const queryCache = new Map();
+
 // Fallback mock events
 const mockEvents = [
   { _id: "1", slug: "nameless-music-festival", title: "UNISYNC Music Festival", description: "Get ready for the biggest music festival campus experience ever.", startDate: new Date().getTime() + 864000000, city: "Pune", state: "MH", registrationCount: 1240, coverImage: "https://images.unsplash.com/photo-1540039155732-6761b54cb118?q=80&w=2670&auto=format&fit=crop", category: "music", themeColor: "#ff6b00", ticketType: "paid", capacity: 5000 },
@@ -42,10 +46,46 @@ const useMockMutation = (mutation) => async (...args) => {
 const useActualQuery = isBackendEnabled ? useOriginalQuery : ((q, ...args) => useMockQuery(q, ...args));
 const useActualMutation = isBackendEnabled ? useOriginalMutation : useMockMutation;
 
+const queryIdentity = new WeakMap();
+let queryIdentityCounter = 0;
+
+const getQueryIdentity = (query) => {
+  if (query && (typeof query === "object" || typeof query === "function")) {
+    if (!queryIdentity.has(query)) {
+      queryIdentityCounter += 1;
+      queryIdentity.set(query, `query-${queryIdentityCounter}`);
+    }
+    return queryIdentity.get(query);
+  }
+  if (query == null) return "query-null";
+  const primitiveType = typeof query;
+  if (primitiveType === "string" || primitiveType === "number" || primitiveType === "boolean" || primitiveType === "bigint") {
+    return `query-${primitiveType}-${String(query)}`;
+  }
+  return `query-${primitiveType}`;
+};
+
+const safeSerialize = (value) => {
+  try {
+    return JSON.stringify(value);
+  } catch (_err) {
+    return "unserializable";
+  }
+};
+
+const buildCacheKey = (query, args) => {
+  const queryPart = getQueryIdentity(query);
+  const argsPart = safeSerialize(args?.[0] ?? {});
+  return `${queryPart}::${argsPart}`;
+};
+
 export const useConvexQuery = (query, ...args) => {
+  const cacheKey = buildCacheKey(query, args);
+  const cachedValue = queryCache.get(cacheKey);
+
   const result = useActualQuery(query, ...args);
-  const [data, setData] = useState(undefined);
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState(cachedValue);
+  const [isLoading, setIsLoading] = useState(cachedValue === undefined);
   const [error, setError] = useState(null);
 
   // Use effect to handle the state changes based on the query result
@@ -55,6 +95,7 @@ export const useConvexQuery = (query, ...args) => {
     } else {
       try {
         setData(result);
+        queryCache.set(cacheKey, result);
         setError(null);
       } catch (err) {
         setError(err);
@@ -63,7 +104,7 @@ export const useConvexQuery = (query, ...args) => {
         setIsLoading(false);
       }
     }
-  }, [result]);
+  }, [result, cacheKey]);
 
   return {
     data,

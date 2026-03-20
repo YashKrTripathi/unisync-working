@@ -6,21 +6,27 @@ import { usePathname } from "next/navigation";
 import {
   Menu,
   X,
+  Ticket,
 } from "lucide-react";
-import { BarLoader } from "react-spinners";
 import { SignInButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { useStoreUser } from "@/hooks/use-store-user";
+import { useConvexQuery } from "@/hooks/use-convex-query";
+import { api } from "@/convex/_generated/api";
 
 const isBackendEnabled = Boolean(
   process.env.NEXT_PUBLIC_CONVEX_URL &&
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 );
 
+const STAFF_ROLES = new Set(["organiser", "superadmin", "owner"]);
+
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
+  { href: "/events", label: "Events" },
+  { href: "/pitch-event", label: "Pitch Event" },
+  { href: "/contact-us", label: "Contact Us" },
   { href: "/location", label: "Location" },
   { href: "/partner", label: "Partner" },
-  { href: "/events", label: "Events" },
   { href: "/faq", label: "FAQ" },
 ];
 
@@ -68,7 +74,7 @@ function DesktopNav() {
   );
 }
 
-function AuthAction({ useClerk = false }) {
+function AuthAction({ useClerk = false, canManageEvents = false }) {
   if (!useClerk) {
     return (
       <div className="hidden items-center xl:flex">
@@ -83,18 +89,42 @@ function AuthAction({ useClerk = false }) {
   }
 
   return (
-    <div className="hidden items-center xl:flex">
+    <div className="hidden items-center gap-2 xl:flex">
+      {canManageEvents ? (
+        <SignedIn>
+          <Link
+            href="/admin/events"
+            className="rounded-full border border-[#ef8a4a]/30 bg-[#ef8a4a]/15 px-3 py-1.5 text-[13px] font-semibold text-[#ffd4b2] transition-colors hover:border-[#ef8a4a]/60 hover:bg-[#ef8a4a]/25"
+          >
+            Manage Events
+          </Link>
+        </SignedIn>
+      ) : null}
+
       <SignedIn>
-        <div className="ml-1 rounded-full ring-2 ring-white/20 transition-all duration-300 hover:ring-white">
+        <div className="ml-1 overflow-hidden rounded-full ring-2 ring-white/20 transition-all duration-300 hover:ring-white">
           <UserButton
             afterSignOutUrl="/"
             appearance={{
               elements: {
-                avatarBox: "w-9 h-9",
+                avatarBox: "h-9 w-9 overflow-hidden rounded-full shrink-0",
+                userButtonPopoverCard: "rounded-2xl border border-white/10 shadow-2xl bg-[#0f0e16]/95 text-white min-w-[280px]",
+                userButtonPopoverHeader: "border-b border-white/10 bg-[#0f0e16]/80",
+                userButtonPopoverActionButton: "hover:bg-white/5",
+                userButtonPopoverActions: "bg-transparent",
                 userButtonPopoverFooter: "hidden",
+                userButtonPopoverText: "text-white",
               },
             }}
-          />
+          >
+            <UserButton.MenuItems>
+              <UserButton.Link
+                href="/my-tickets"
+                label="My Tickets"
+                labelIcon={<Ticket className="h-4 w-4" />}
+              />
+            </UserButton.MenuItems>
+          </UserButton>
         </div>
       </SignedIn>
 
@@ -120,7 +150,7 @@ function MobileMenuToggle({ open, setOpen }) {
   );
 }
 
-function MobileMenu({ open, setOpen, useClerk = false }) {
+function MobileMenu({ open, setOpen, useClerk = false, canManageEvents = false }) {
   if (!open) return null;
 
   return (
@@ -141,12 +171,12 @@ function MobileMenu({ open, setOpen, useClerk = false }) {
             <>
               <SignedIn>
                 <div className="flex justify-center">
-                  <div className="rounded-full ring-2 ring-white/20">
+                  <div className="overflow-hidden rounded-full ring-2 ring-white/20">
                     <UserButton
                       afterSignOutUrl="/"
                       appearance={{
                         elements: {
-                          avatarBox: "w-10 h-10",
+                          avatarBox: "h-10 w-10 overflow-hidden rounded-full shrink-0",
                           userButtonPopoverFooter: "hidden",
                         },
                       }}
@@ -174,6 +204,19 @@ function MobileMenu({ open, setOpen, useClerk = false }) {
               Sign In
             </Link>
           )}
+          {canManageEvents ? (
+            <SignedIn>
+              <div className="mt-3">
+                <Link
+                  href="/admin/events"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-2xl border border-[#ef8a4a]/40 bg-[#ef8a4a]/15 px-3 py-2 text-center text-sm font-semibold text-[#ffd4b2] hover:border-[#ef8a4a]/70 hover:bg-[#ef8a4a]/25"
+                >
+                  Manage Events
+                </Link>
+              </div>
+            </SignedIn>
+          ) : null}
         </div>
       </div>
     </div>
@@ -200,8 +243,8 @@ function HeaderFrame({
   mobileMenuOpen,
   setMobileMenuOpen,
   rightContent,
-  loadingBar,
   useClerk = false,
+  canManageEvents = false,
 }) {
   return (
     <div className="fixed left-0 right-0 top-0 z-50 px-4 pt-3 md:px-6">
@@ -226,15 +269,14 @@ function HeaderFrame({
           {rightContent}
           <MobileMenuToggle open={mobileMenuOpen} setOpen={setMobileMenuOpen} />
         </div>
-
-        {loadingBar ? (
-          <div className="absolute left-1/2 top-full mt-2 w-full max-w-[300px] -translate-x-1/2 overflow-hidden rounded-full">
-            <BarLoader width={"100%"} height={2} color="#3b82f6" speedMultiplier={0.8} />
-          </div>
-        ) : null}
       </nav>
 
-      <MobileMenu open={mobileMenuOpen} setOpen={setMobileMenuOpen} useClerk={useClerk} />
+      <MobileMenu
+        open={mobileMenuOpen}
+        setOpen={setMobileMenuOpen}
+        useClerk={useClerk}
+        canManageEvents={canManageEvents}
+      />
     </div>
   );
 }
@@ -248,26 +290,28 @@ function MockHeader() {
       scrolled={scrolled}
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
-      rightContent={<AuthAction useClerk={false} />}
-      loadingBar={false}
+      rightContent={<AuthAction useClerk={false} canManageEvents={false} />}
       useClerk={false}
+      canManageEvents={false}
     />
   );
 }
 
 function AuthHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isLoading } = useStoreUser();
+  useStoreUser();
+  const { data: adminCheck } = useConvexQuery(api.admin.isAdmin);
   const scrolled = useScrollDirection();
+  const canManageEvents = STAFF_ROLES.has(adminCheck?.role);
 
   return (
     <HeaderFrame
       scrolled={scrolled}
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
-      loadingBar={isLoading}
-      rightContent={<AuthAction useClerk={true} />}
+      rightContent={<AuthAction useClerk={true} canManageEvents={canManageEvents} />}
       useClerk={true}
+      canManageEvents={canManageEvents}
     />
   );
 }

@@ -3,13 +3,15 @@ import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 // ─── Helper: verify admin access ────────────────────────────────────────────
+const ADMIN_ROLES = ["organiser", "superadmin", "owner"];
+
 async function requireAdmin(ctx) {
-    const user = await ctx.runQuery(internal.users.getCurrentUser);
-    const role = user?.role || "student";
-    if (!user || role !== "organiser") {
-        return null;
-    }
-    return { user, role };
+  const user = await ctx.runQuery(internal.users.getCurrentUser);
+  const role = user?.role || "student";
+  if (!user || !ADMIN_ROLES.includes(role)) {
+    return null;
+  }
+  return { user, role };
 }
 
 // ─── Simple event list for dropdown ─────────────────────────────────────────

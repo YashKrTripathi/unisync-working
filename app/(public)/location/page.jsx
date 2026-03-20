@@ -37,7 +37,7 @@ export default function LocationPage() {
           </div>
           <div className="p-8 border border-white/10 rounded-3xl bg-black">
             <h3 className="flex items-center gap-4 text-2xl font-bold text-white mb-2 font-display uppercase tracking-widest"><Car className="text-[#ff6b00]"/> By Car</h3>
-            <p className="text-white/60 font-sans leading-relaxed">Take the Pune-Mumbai Expressway. Premium festival parking is available for pre-booking. Follow signs for 'UNISYNC FESTIVAL'.</p>
+            <p className="text-white/60 font-sans leading-relaxed">Take the Pune-Mumbai Expressway. Premium festival parking is available for pre-booking. Follow signs for &apos;UNISYNC FESTIVAL&apos;.</p>
           </div>
         </div>
       </div>

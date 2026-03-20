@@ -19,6 +19,17 @@ export const store = mutation({
       )
       .unique();
 
+    // Promote owner by email if configured (supports comma-separated list)
+    const ownerEmails = (
+      process.env.OWNER_EMAILS ||
+      process.env.OWNER_EMAIL ||
+      ""
+    )
+      .toLowerCase()
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
+
     if (user !== null) {
       // If we've seen this identity before but details changed, update them
       const updates = {};
@@ -31,6 +42,14 @@ export const store = mutation({
       if (user.imageUrl !== identity.pictureUrl) {
         updates.imageUrl = identity.pictureUrl;
       }
+      if (
+        ownerEmails.length &&
+        identity.email &&
+        ownerEmails.includes(identity.email.toLowerCase()) &&
+        user.role !== "owner"
+      ) {
+        updates.role = "owner";
+      }
 
       if (Object.keys(updates).length > 0) {
         updates.updatedAt = Date.now();
@@ -41,12 +60,17 @@ export const store = mutation({
     }
 
     // If it's a new identity, create a new user with defaults
+    const initialRole =
+      ownerEmails.length && identity.email && ownerEmails.includes(identity.email.toLowerCase())
+        ? "owner"
+        : "student";
+
     return await ctx.db.insert("users", {
       email: identity.email ?? "",
       tokenIdentifier: identity.tokenIdentifier,
       name: identity.name ?? "Anonymous",
       imageUrl: identity.pictureUrl,
-      role: "student",
+      role: initialRole,
       hasCompletedOnboarding: false,
       freeEventsCreated: 0,
       createdAt: Date.now(),

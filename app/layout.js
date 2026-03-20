@@ -5,6 +5,7 @@ import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { Toaster } from "sonner";
 import PublicShell from "@/components/public-shell";
 import { Inter, Anton, Playfair_Display } from "next/font/google";
+import PreloadEvents from "@/components/preload-events";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
@@ -33,11 +34,14 @@ export default function RootLayout({ children }) {
           defaultTheme="dark"
           forcedTheme="dark"
           disableTransitionOnChange
-        >
-          <ConvexClientProvider>
-            {/* PublicShell conditionally shows the public Header/Footer. */}
-            <PublicShell>{children}</PublicShell>
-            <CustomScrollbar />
+          >
+            <ConvexClientProvider>
+              <PreloadEvents />
+              <div className="relative z-40">
+                {/* PublicShell conditionally shows the public Header/Footer. */}
+                <PublicShell>{children}</PublicShell>
+              </div>
+              <CustomScrollbar />
             <Toaster position="top-center" richColors />
           </ConvexClientProvider>
         </ThemeProvider>

@@ -1,6 +1,7 @@
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { canManageEvent } from "./eventPermissions";
 
 // Generate unique QR code ID
 function generateQRCode() {
@@ -154,9 +155,7 @@ export const getEventRegistrations = query({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer or an organiser-admin
-    const userRole = user.role || "student";
-    if (event.organizerId !== user._id && userRole !== "organiser") {
+    if (!canManageEvent(event, user)) {
       throw new Error("You are not authorized to view registrations");
     }
 
@@ -189,9 +188,7 @@ export const checkInAttendee = mutation({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer or an organiser-admin
-    const userRole = user.role || "student";
-    if (event.organizerId !== user._id && userRole !== "organiser") {
+    if (!canManageEvent(event, user)) {
       throw new Error("You are not authorized to check in attendees");
     }
 

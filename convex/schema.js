@@ -11,10 +11,14 @@ export default defineSchema({
     imageUrl: v.optional(v.string()),
 
     // Role-based access (optional for backward compat, defaults to "student")
-    role: v.optional(v.union(
-      v.literal("student"),
-      v.literal("organiser"),
-    )),
+    role: v.optional(
+      v.union(
+        v.literal("student"),
+        v.literal("organiser"),
+        v.literal("superadmin"),
+        v.literal("owner"),
+      )
+    ),
 
     // Onboarding
     hasCompletedOnboarding: v.boolean(),
@@ -60,11 +64,13 @@ export default defineSchema({
 
     // Location
     locationType: v.union(v.literal("physical"), v.literal("online")),
+    venueScope: v.optional(v.union(v.literal("internal"), v.literal("external"))),
     venue: v.optional(v.string()),
     address: v.optional(v.string()),
     city: v.string(),
     state: v.optional(v.string()), // Added state field
     country: v.string(),
+    externalReason: v.optional(v.string()),
 
     // Capacity & Ticketing
     capacity: v.number(),
@@ -76,6 +82,31 @@ export default defineSchema({
     // Customization
     coverImage: v.optional(v.string()),
     themeColor: v.optional(v.string()),
+    eventAdmins: v.optional(v.array(v.object({
+      userId: v.id("users"),
+      name: v.string(),
+      email: v.string(),
+      assignedAt: v.number(),
+    }))),
+    contentSections: v.optional(v.object({
+      heroBlurb: v.optional(v.string()),
+      attendeeNotes: v.optional(v.string()),
+      contactEmail: v.optional(v.string()),
+      whyAttend: v.optional(v.array(v.string())),
+      agenda: v.optional(v.array(v.object({
+        time: v.string(),
+        title: v.string(),
+        description: v.optional(v.string()),
+      }))),
+      faqs: v.optional(v.array(v.object({
+        question: v.string(),
+        answer: v.string(),
+      }))),
+      resources: v.optional(v.array(v.object({
+        label: v.string(),
+        url: v.string(),
+      }))),
+    })),
 
     // Event status (optional for backward compat, defaults to "approved")
     status: v.optional(
@@ -139,4 +170,52 @@ export default defineSchema({
     reason: v.optional(v.string()),
     timestamp: v.number(),
   }).index("by_event", ["eventId"]),
+
+  eventProposals: defineTable({
+    proposerId: v.id("users"),
+    proposerName: v.string(),
+    proposerEmail: v.string(),
+    title: v.string(),
+    category: v.string(),
+    conceptNote: v.string(),
+    objectives: v.array(v.string()),
+    targetAudience: v.string(),
+    preferredStartDate: v.optional(v.number()),
+    preferredEndDate: v.optional(v.number()),
+    locationPreference: v.union(v.literal("internal"), v.literal("external"), v.literal("online")),
+    expectedCapacity: v.optional(v.number()),
+    aiSupportPlan: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("denied"),
+      v.literal("converted")
+    ),
+    reviewNotes: v.optional(v.string()),
+    reviewedById: v.optional(v.id("users")),
+    reviewedByName: v.optional(v.string()),
+    linkedEventId: v.optional(v.id("events")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_proposer", ["proposerId"])
+    .index("by_status", ["status"]),
+
+  eventChangeRequests: defineTable({
+    eventId: v.id("events"),
+    requestedById: v.id("users"),
+    requestedByName: v.string(),
+    requestType: v.string(),
+    summary: v.string(),
+    aiPrompt: v.optional(v.string()),
+    proposedPayload: v.string(),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("denied")),
+    reviewNotes: v.optional(v.string()),
+    reviewedById: v.optional(v.id("users")),
+    reviewedByName: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_event", ["eventId"])
+    .index("by_status", ["status"]),
 });

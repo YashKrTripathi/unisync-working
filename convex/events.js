@@ -1,26 +1,22 @@
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { canManageEvent, normalizeList } from "./eventPermissions";
 
-/**
- * Whitelist of fields allowed in the "events" table.
- * Any transient/client-only keys (e.g. hasPro) are automatically stripped
- * before insert so they can never cause a schema-validation error.
- */
 const EVENT_SCHEMA_FIELDS = new Set([
   "title", "description", "slug",
   "organizerId", "organizerName",
   "category", "tags",
   "startDate", "endDate", "timezone",
-  "locationType", "venue", "address", "city", "state", "country",
+  "locationType", "venueScope", "venue", "address", "city", "state", "country", "externalReason",
   "capacity", "ticketType", "ticketPrice", "registrationCount",
   "eventCode",
   "coverImage", "themeColor",
+  "eventAdmins", "contentSections",
   "status",
   "createdAt", "updatedAt",
 ]);
 
-/** Keep only the keys that exist in the events schema. */
 function sanitizeEventData(obj) {
   return Object.fromEntries(
     Object.entries(obj).filter(([key]) => EVENT_SCHEMA_FIELDS.has(key))
@@ -43,7 +39,15 @@ function generateEventCode(title) {
   return `${prefix}${suffix}`;
 }
 
-// Create a new event
+function buildSlug(title) {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+  return `${slug}-${Date.now()}`;
+}
+
 export const createEvent = mutation({
   args: {
     title: v.string(),
@@ -54,73 +58,69 @@ export const createEvent = mutation({
     endDate: v.number(),
     timezone: v.string(),
     locationType: v.union(v.literal("physical"), v.literal("online")),
+    venueScope: v.optional(v.union(v.literal("internal"), v.literal("external"))),
     venue: v.optional(v.string()),
     address: v.optional(v.string()),
     city: v.string(),
     state: v.optional(v.string()),
     country: v.string(),
+    externalReason: v.optional(v.string()),
     capacity: v.number(),
     ticketType: v.union(v.literal("free"), v.literal("paid")),
     ticketPrice: v.optional(v.number()),
     coverImage: v.optional(v.string()),
     themeColor: v.optional(v.string()),
     hasPro: v.optional(v.boolean()),
+    eventAdmins: v.optional(v.array(v.object({
+      userId: v.id("users"),
+      name: v.string(),
+      email: v.string(),
+      assignedAt: v.number(),
+    }))),
+    contentSections: v.optional(v.object({
+      heroBlurb: v.optional(v.string()),
+      attendeeNotes: v.optional(v.string()),
+      contactEmail: v.optional(v.string()),
+      whyAttend: v.optional(v.array(v.string())),
+      agenda: v.optional(v.array(v.object({
+        time: v.string(),
+        title: v.string(),
+        description: v.optional(v.string()),
+      }))),
+      faqs: v.optional(v.array(v.object({
+        question: v.string(),
+        answer: v.string(),
+      }))),
+      resources: v.optional(v.array(v.object({
+        label: v.string(),
+        url: v.string(),
+      }))),
+    })),
   },
   handler: async (ctx, args) => {
     try {
       const { hasPro = false, ...eventData } = args;
       const user = await ctx.runQuery(internal.users.getCurrentUser);
 
-      // Only organisers can create events
-      const role = user.role || "student";
-      if (role !== "organiser") {
-        throw new Error("Only organisers can create events. Contact admin to get organiser role.");
+      const role = user?.role || "student";
+      if (!user || !["organiser", "superadmin", "owner"].includes(role)) {
+        throw new Error("Only organisers or superadmins can create events. Contact admin to get access.");
       }
 
-      // SERVER-SIDE CHECK: Verify event limit for Free users
-      if (!hasPro && user.freeEventsCreated >= 1) {
-        throw new Error(
-          "Free event limit reached. Please upgrade to Pro to create more events."
-        );
-      }
+      const themeColor = args.themeColor || "#1e3a8a";
 
-      // SERVER-SIDE CHECK: Verify custom color usage
-      const defaultColor = "#1e3a8a";
-      if (!hasPro && args.themeColor && args.themeColor !== defaultColor) {
-        throw new Error(
-          "Custom theme colors are a Pro feature. Please upgrade to Pro."
-        );
-      }
-
-      // Force default color for Free users
-      const themeColor = hasPro ? args.themeColor : defaultColor;
-
-      // Generate slug from title
-      const slug = args.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-      // Create event – sanitize to drop any transient client flags
       const eventId = await ctx.db.insert("events", {
         ...sanitizeEventData(eventData),
-        themeColor, // Use validated color
-        slug: `${slug}-${Date.now()}`,
+        themeColor,
+        slug: buildSlug(args.title),
         eventCode: generateEventCode(args.title),
         organizerId: user._id,
         organizerName: user.name,
         registrationCount: 0,
-        status: role === "organiser" ? "approved" : "pending",
+        status: "approved",
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
-
-      // Update user's free event count
-      if (!hasPro) {
-        await ctx.db.patch(user._id, {
-          freeEventsCreated: user.freeEventsCreated + 1,
-        });
-      }
 
       return eventId;
     } catch (error) {
@@ -129,7 +129,76 @@ export const createEvent = mutation({
   },
 });
 
-// Get event by slug
+export const createProposal = mutation({
+  args: {
+    title: v.string(),
+    category: v.string(),
+    conceptNote: v.string(),
+    objectives: v.array(v.string()),
+    targetAudience: v.string(),
+    preferredStartDate: v.optional(v.number()),
+    preferredEndDate: v.optional(v.number()),
+    locationPreference: v.union(v.literal("internal"), v.literal("external"), v.literal("online")),
+    expectedCapacity: v.optional(v.number()),
+    aiSupportPlan: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+
+    const role = user?.role || "student";
+    if (!user || !["organiser", "superadmin", "owner"].includes(role)) {
+      throw new Error("Only organisers can propose events.");
+    }
+
+    return await ctx.db.insert("eventProposals", {
+      proposerId: user._id,
+      proposerName: user.name,
+      proposerEmail: user.email,
+      title: args.title,
+      category: args.category,
+      conceptNote: args.conceptNote,
+      objectives: normalizeList(args.objectives),
+      targetAudience: args.targetAudience,
+      preferredStartDate: args.preferredStartDate,
+      preferredEndDate: args.preferredEndDate,
+      locationPreference: args.locationPreference,
+      expectedCapacity: args.expectedCapacity,
+      aiSupportPlan: args.aiSupportPlan,
+      status: "pending",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const getMyEventProposals = query({
+  handler: async (ctx) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) return [];
+
+    return await ctx.db
+      .query("eventProposals")
+      .withIndex("by_proposer", (q) => q.eq("proposerId", user._id))
+      .order("desc")
+      .collect();
+  },
+});
+
+export const getProposalById = query({
+  args: { proposalId: v.id("eventProposals") },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const proposal = await ctx.db.get(args.proposalId);
+    if (!proposal || !user) return null;
+
+    if (proposal.proposerId !== user._id && !["organiser", "superadmin", "owner"].includes(user.role || "student")) {
+      throw new Error("You are not authorized to view this proposal.");
+    }
+
+    return proposal;
+  },
+});
+
 export const getEventBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
@@ -147,43 +216,90 @@ export const getEventBySlug = query({
     return {
       ...event,
       organizerImageUrl: organizer?.imageUrl,
+      contentSections: event.contentSections || {},
+      eventAdmins: event.eventAdmins || [],
     };
   },
 });
 
-// Get events by organizer
 export const getMyEvents = query({
   handler: async (ctx) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) return [];
 
-    const events = await ctx.db
-      .query("events")
-      .withIndex("by_organizer", (q) => q.eq("organizerId", user._id))
-      .order("desc")
-      .collect();
+    const allEvents = await ctx.db.query("events").order("desc").collect();
 
-    return events;
+    return allEvents
+      .filter((event) => event.organizerId === user._id || (event.eventAdmins || []).some((admin) => admin.userId === user._id))
+      .map((event) => ({
+        ...event,
+        myAccessRole: event.organizerId === user._id ? "owner" : "event_admin",
+      }));
   },
 });
 
-// Delete event
+export const submitEventChangeRequest = mutation({
+  args: {
+    eventId: v.id("events"),
+    requestType: v.string(),
+    summary: v.string(),
+    aiPrompt: v.optional(v.string()),
+    proposedPayload: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) throw new Error("Please sign in to continue.");
+
+    const event = await ctx.db.get(args.eventId);
+    if (!canManageEvent(event, user)) {
+      throw new Error("You are not authorized to suggest changes for this event.");
+    }
+
+    return await ctx.db.insert("eventChangeRequests", {
+      eventId: args.eventId,
+      requestedById: user._id,
+      requestedByName: user.name,
+      requestType: args.requestType,
+      summary: args.summary,
+      aiPrompt: args.aiPrompt,
+      proposedPayload: args.proposedPayload,
+      status: "pending",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const getEventChangeRequests = query({
+  args: { eventId: v.id("events") },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const event = await ctx.db.get(args.eventId);
+    if (!canManageEvent(event, user)) {
+      throw new Error("You are not authorized to view change requests for this event.");
+    }
+
+    return await ctx.db
+      .query("eventChangeRequests")
+      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+      .order("desc")
+      .collect();
+  },
+});
+
 export const deleteEvent = mutation({
   args: { eventId: v.id("events") },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
-
     const event = await ctx.db.get(args.eventId);
-    if (!event) {
+    if (!event || !user) {
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer or an organiser-admin
-    const userRole = user.role || "student";
-    if (event.organizerId !== user._id && userRole !== "organiser") {
+    if (event.organizerId !== user._id && !["organiser", "superadmin", "owner"].includes(user.role || "student")) {
       throw new Error("You are not authorized to delete this event");
     }
 
-    // Delete all registrations for this event
     const registrations = await ctx.db
       .query("registrations")
       .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
@@ -193,15 +309,16 @@ export const deleteEvent = mutation({
       await ctx.db.delete(registration._id);
     }
 
-    // Delete the event
-    await ctx.db.delete(args.eventId);
+    const requests = await ctx.db
+      .query("eventChangeRequests")
+      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+      .collect();
 
-    // Update free event count if it was a free event
-    if (event.ticketType === "free" && user.freeEventsCreated > 0) {
-      await ctx.db.patch(user._id, {
-        freeEventsCreated: user.freeEventsCreated - 1,
-      });
+    for (const request of requests) {
+      await ctx.db.delete(request._id);
     }
+
+    await ctx.db.delete(args.eventId);
 
     return { success: true };
   },

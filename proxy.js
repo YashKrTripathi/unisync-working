@@ -8,9 +8,13 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
+  // Skip auth resolution for public pages to keep route latency low.
+  if (!isProtectedRoute(req)) {
+    return NextResponse.next();
+  }
 
-  if (!userId && isProtectedRoute(req)) {
+  const { userId } = await auth();
+  if (!userId) {
     const { redirectToSignIn } = await auth();
     return redirectToSignIn();
   }
@@ -20,9 +24,11 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
+    // Run middleware only where auth checks are needed.
+    "/my-events(.*)",
+    "/create-event(.*)",
+    "/my-tickets(.*)",
+    // Keep API matcher for future protected API checks.
     "/(api|trpc)(.*)",
   ],
 };

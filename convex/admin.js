@@ -7,14 +7,16 @@ export const getAdminUsers = query({
     handler: async (ctx) => {
         const user = await ctx.runQuery(internal.users.getCurrentUser);
         const role = user?.role || "student";
-        if (!user || role !== "organiser") {
+        if (!user || !["organiser", "superadmin", "owner"].includes(role)) {
             return [];
         }
 
         const organisers = await ctx.db
             .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "organiser"))
-            .collect();
+            .collect()
+            .then((users) =>
+                users.filter((u) => ["organiser", "superadmin", "owner"].includes(u.role || "student"))
+            );
 
         return organisers;
     },
@@ -39,11 +41,13 @@ export const isAdmin = query({
         return {
             isStudent: role === "student",
             isOrganiser: role === "organiser",
-            isAdmin: role === "organiser", // organiser acts as admin
-            isSuperAdmin: false, // No super admin in simplified system
-            canAccessAdminPanel: role === "organiser",
-            canCreateEvents: role === "organiser",
+            isSuperAdmin: role === "superadmin" || role === "owner",
+            isOwner: role === "owner",
+            isAdmin: ["organiser", "superadmin", "owner"].includes(role),
+            canAccessAdminPanel: ["organiser", "superadmin", "owner"].includes(role),
+            canCreateEvents: ["organiser", "superadmin", "owner"].includes(role),
             role,
+            roleLabel: role === "owner" ? "owner" : role === "superadmin" ? "superadmin" : role,
             user,
         };
     },
@@ -56,12 +60,25 @@ export const setUserRole = mutation({
         role: v.union(
             v.literal("student"),
             v.literal("organiser"),
+            v.literal("superadmin"),
         ),
     },
     handler: async (ctx, args) => {
         const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
-        if (!currentUser || currentUser.role !== "organiser") {
-            throw new Error("Unauthorized: Only Organisers can change roles");
+        const role = currentUser?.role || "student";
+        if (!currentUser || !["owner", "superadmin"].includes(role)) {
+            throw new Error("Unauthorized: Only Owner/Superadmin can change roles");
+        }
+
+        // Only the owner can promote/demote to superadmin
+        if (args.role === "superadmin" && role !== "owner") {
+            throw new Error("Only the Owner can assign superadmin");
+        }
+
+        // Protect owner account from being overwritten
+        const target = await ctx.db.get(args.userId);
+        if (target?.role === "owner") {
+            throw new Error("Owner role cannot be changed");
         }
 
         await ctx.db.patch(args.userId, {

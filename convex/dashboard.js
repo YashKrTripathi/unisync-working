@@ -1,6 +1,7 @@
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { canManageEvent } from "./eventPermissions";
 
 // Get event with detailed stats for dashboard
 export const getEventDashboard = query({
@@ -17,8 +18,7 @@ export const getEventDashboard = query({
       throw new Error("Event not found");
     }
 
-    // Check if user is the organizer
-    if (event.organizerId !== user._id) {
+    if (!canManageEvent(event, user)) {
       throw new Error("You are not authorized to view this dashboard");
     }
 

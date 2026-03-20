@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Instagram, Twitter, Facebook, Youtube } from "lucide-react";
+import { ArrowRight, Instagram, Facebook, Youtube } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="relative bg-[#0a0a0a] min-h-[60vh] flex flex-col justify-end pt-32 pb-8 overflow-hidden border-t border-white/10 mt-20">
+    <footer className="relative bg-[#0a0a0a] min-h-[30vh] flex flex-col justify-end pt-16 pb-8 overflow-hidden border-t border-white/10">
       {/* Background Gradient */}
       <div className="absolute bottom-[-20%] right-[0%] w-[80vw] h-[80vh] bg-[#ff6b00] rounded-full blur-[140px] opacity-20 pointer-events-none" />
 
@@ -25,6 +25,7 @@ const Footer = () => {
               EventHub
             </p>
             <div className="flex flex-col space-y-3 pt-4">
+              <Link href="https://www.dypiu.ac.in/" className="underline underline-offset-4 decoration-white/30 hover:decoration-white transition-colors" target="_blank" rel="noreferrer">Main Website</Link>
               <Link href="#" className="underline underline-offset-4 decoration-white/30 hover:decoration-white transition-colors">Privacy Policy</Link>
               <Link href="#" className="underline underline-offset-4 decoration-white/30 hover:decoration-white transition-colors">Cookie Policy</Link>
               <Link href="#" className="underline underline-offset-4 decoration-white/30 hover:decoration-white transition-colors">Review your cookie settings</Link>
@@ -46,10 +47,9 @@ const Footer = () => {
               <ArrowRight className="w-5 h-5" />
             </a>
             <div className="flex items-center gap-6 pt-4 pr-2">
-              <a href="#" className="hover:opacity-70 transition-opacity"><Instagram className="w-6 h-6" strokeWidth={1.5} /></a>
-              <a href="#" className="hover:opacity-70 transition-opacity"><Twitter className="w-6 h-6" strokeWidth={1.5} /></a>
-              <a href="#" className="hover:opacity-70 transition-opacity"><Facebook className="w-6 h-6" strokeWidth={1.5} /></a>
-              <a href="#" className="hover:opacity-70 transition-opacity"><Youtube className="w-6 h-6" strokeWidth={1.5} /></a>
+              <a href="https://www.instagram.com/DYPIU_AKURDI/" target="_blank" rel="noreferrer" className="hover:opacity-70 transition-opacity"><Instagram className="w-6 h-6" strokeWidth={1.5} /></a>
+              <a href="https://www.facebook.com/DYPIUAkurdi/" target="_blank" rel="noreferrer" className="hover:opacity-70 transition-opacity"><Facebook className="w-6 h-6" strokeWidth={1.5} /></a>
+              <a href="https://www.youtube.com/@dypiu_akurdi" target="_blank" rel="noreferrer" className="hover:opacity-70 transition-opacity"><Youtube className="w-6 h-6" strokeWidth={1.5} /></a>
             </div>
           </div>
         </div>
