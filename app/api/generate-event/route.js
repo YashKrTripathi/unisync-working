@@ -24,6 +24,52 @@ Rules:
 - Keep it on a single line with spaces instead of line breaks`;
   }
 
+  if (task === "beautifyEvent") {
+    const eventDetails = arguments[2] || {};
+
+    return `You are a world-class UI/UX design assistant specializing in event branding.
+Your goal is to take a user's prompt and event data, and return a JSON object representing the "beautified" visual theme and content updates.
+
+Event Title: ${eventDetails.title || ""}
+Event Category: ${eventDetails.category || ""}
+Current Description: ${eventDetails.description || ""}
+
+USER PROMPT: "${prompt}"
+
+CRITICAL: Return ONLY valid JSON. No markdown. No explanation.
+
+Return this exact JSON structure:
+{
+  "themeColor": "HEX_COLOR",
+  "primaryColor": "HEX_COLOR",
+  "secondaryColor": "HEX_COLOR",
+  "fontFamily": "sans | serif | mono",
+  "layoutVariant": "modern | sleek | brutalist | elegant",
+  "customCss": "Optional CSS string for micro-animations or layout tweaks",
+  "heroBlurb": "A compelling, generated 1-2 sentence hero hook",
+  "updates": {
+    "description": "Enhanced, professionally written description",
+    "whyAttend": ["Compelling reason 1", "Compelling reason 2", "Compelling reason 3"],
+    "agenda": [
+      { "time": "9:00 AM", "title": "Welcome", "description": "Brief intro" },
+      { "time": "10:30 AM", "title": "Main Session", "description": "Detailed talk" }
+    ],
+    "faqs": [
+      { "question": "Who can join?", "answer": "All students are welcome!" },
+      { "question": "Is it free?", "answer": "Yes, completely free." }
+    ]
+  }
+}
+
+STYLING GUIDELINES BY CATEGORY:
+- Competition: High-energy, bold gradients, darker backgrounds, "brutalist" or "sleek" layouts. Focus on prize pools and timelines.
+- Workshop: Practical, interactive feel, clean "modern" layout, energetic accents. Focus on curriculum and what tools to bring.
+- Seminar: Premium, professional, "elegant" or "sleek" layout. Use serif fonts for a scholarly feel. Focus on speaker authority and networking.
+
+The "updates" object should contain realistic, high-quality content based on the event title and category.
+Do not include any markdown or commentary. Only the raw JSON.`;
+  }
+
   return `You are an event planning assistant. Generate event details based on the user's description.
 
 CRITICAL: Return ONLY valid JSON with properly escaped strings. No newlines in string values - use spaces instead.
@@ -62,7 +108,7 @@ function cleanJsonText(text) {
 
 export async function POST(req) {
   try {
-    const { prompt, task = "generateEvent" } = await req.json();
+    const { prompt, task = "generateEvent", eventDetails } = await req.json();
 
     if (!prompt) {
       return NextResponse.json(
@@ -95,7 +141,7 @@ export async function POST(req) {
         messages: [
           {
             role: "user",
-            content: buildPrompt(task, prompt),
+            content: buildPrompt(task, prompt, eventDetails),
           },
         ],
       }),

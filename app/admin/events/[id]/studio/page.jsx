@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
-import { useMutation, useQuery, useAction } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -42,7 +42,6 @@ export default function CreativeStudioPage({ params }) {
   const adminCheck = useQuery(api.admin.isAdmin);
   const event = useQuery(api.adminEvents.getEventWithStats, { eventId: id });
   const updateVisuals = useMutation(api.adminEvents.updateEventVisuals);
-  const beautifyAction = useAction(api.aiEvents.beautifyEvent);
 
   const [activePanel, setActivePanel] = useState("ai"); // ai, visuals, content
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
@@ -107,14 +106,27 @@ export default function CreativeStudioPage({ params }) {
     
     setIsGenerating(true);
     try {
-      const result = await beautifyAction({
-        prompt: aiPrompt,
-        eventDetails: {
-          title: event.title,
-          category: event.category,
-          description: event.description
-        }
+      const response = await fetch("/api/generate-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          task: "beautifyEvent",
+          prompt: aiPrompt,
+          eventDetails: {
+            title: event.title,
+            category: event.category,
+            description: event.description,
+          },
+        }),
       });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || "AI generation failed");
+      }
 
       if (result) {
         // Apply AI results to local state
@@ -140,7 +152,7 @@ export default function CreativeStudioPage({ params }) {
       }
     } catch (error) {
       console.error("AI Error:", error);
-      toast.error("AI generation failed. Please try again.");
+      toast.error(error.message || "AI generation failed. Please try again.");
     } finally {
       setIsGenerating(false);
     }
