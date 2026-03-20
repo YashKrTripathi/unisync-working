@@ -95,16 +95,15 @@ const PAGE_CONFIGS = [
     },
   },
   {
-    pageId: "partners",
-    label: "Partners Page",
-    icon: Handshake,
-    description: "Sponsor tiers and brand names",
+    pageId: "team",
+    label: "Team Page",
+    icon: Users,
+    description: "Display the creators and contributors of UniSync",
     defaultContent: {
-      heading: { prefix: "OUR ", highlight: "PARTNERS" },
-      subtitle: "The brands making the UNISYNC experience unforgettable.",
+      heading: { prefix: "THE ", highlight: "CREATORS" },
+      subtitle: "Meet the minds behind UniSync. Currently, two dedicated individuals are powering this vision.",
       tiers: [
-        { tierName: "Headline Sponsors", brands: ["BRAND A", "BRAND B", "BRAND C", "BRAND D"], cols: 4, height: "h-40" },
-        { tierName: "Official Partners", brands: ["Partner 1", "Partner 2", "Partner 3", "Partner 4", "Partner 5", "Partner 6"], cols: 6, height: "h-24" },
+        { tierName: "Core Creators", brands: ["Yash Kr. Tripathi", "Rigved Aherrao"], cols: 2, height: "h-64" },
       ],
     },
   },

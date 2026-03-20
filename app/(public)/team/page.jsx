@@ -4,29 +4,23 @@ import React from "react";
 import { useConvexQuery } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
 
-const DEFAULT_PARTNERS = {
-  heading: { prefix: "OUR ", highlight: "PARTNERS" },
-  subtitle: "The brands making the UNISYNC experience unforgettable.",
+const DEFAULT_TEAM = {
+  heading: { prefix: "THE ", highlight: "CREATORS" },
+  subtitle: "Meet the minds behind UniSync. Currently, two dedicated individuals are powering this vision.",
   tiers: [
     {
-      tierName: "Headline Sponsors",
-      brands: ["BRAND A", "BRAND B", "BRAND C", "BRAND D"],
-      cols: 4,
-      height: "h-40",
-    },
-    {
-      tierName: "Official Partners",
-      brands: ["Partner 1", "Partner 2", "Partner 3", "Partner 4", "Partner 5", "Partner 6"],
-      cols: 6,
-      height: "h-24",
+      tierName: "Core Creators",
+      brands: ["Yash Kr. Tripathi", "Rigved Aherrao"],
+      cols: 2,
+      height: "h-64",
     },
   ],
 };
 
-export default function PartnerPage() {
-  const { data: cmsContent } = useConvexQuery(api.siteContent.getPageContent, { pageId: "partners" });
-  const content = cmsContent || DEFAULT_PARTNERS;
-  const tiers = content.tiers || DEFAULT_PARTNERS.tiers;
+export default function TeamPage() {
+  const { data: cmsContent } = useConvexQuery(api.siteContent.getPageContent, { pageId: "team" });
+  const content = cmsContent || DEFAULT_TEAM;
+  const tiers = content.tiers || DEFAULT_TEAM.tiers;
 
   return (
     <div className="relative min-h-screen flex flex-col items-center pt-32 pb-24 px-6 md:px-10 bg-[#0a0a0a]">
@@ -38,7 +32,7 @@ export default function PartnerPage() {
           {content.heading?.prefix || "OUR "}<span className="text-[var(--color-nameless-orange)]">{content.heading?.highlight || "PARTNERS"}</span>
         </h1>
         <p className="text-xl md:text-3xl font-serif-italic text-white/80 max-w-2xl mx-auto font-light leading-relaxed">
-          {content.subtitle || DEFAULT_PARTNERS.subtitle}
+          {content.subtitle || DEFAULT_TEAM.subtitle}
         </p>
       </div>
 

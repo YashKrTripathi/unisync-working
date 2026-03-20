@@ -25,8 +25,7 @@ const NAV_ITEMS = [
   { href: "/events", label: "Events" },
   { href: "/pitch-event", label: "Pitch Event" },
   { href: "/contact-us", label: "Contact Us" },
-  { href: "/location", label: "Location" },
-  { href: "/partner", label: "Partner" },
+  { href: "/team", label: "Team" },
   { href: "/faq", label: "FAQ" },
 ];
 
