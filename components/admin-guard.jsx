@@ -3,16 +3,10 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { BarLoader } from "react-spinners";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { Mail, ShieldAlert, Sparkles } from "lucide-react";
 import AnimatedArrowButton from "@/components/ui/animated-arrow-button";
-
-const isBackendEnabled = Boolean(
-    process.env.NEXT_PUBLIC_CONVEX_URL && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-);
 
 const STAFF_ROLE_LABELS = {
     organiser: "Event Manager",
@@ -20,10 +14,6 @@ const STAFF_ROLE_LABELS = {
     owner: "Admin",
     student: "Student",
 };
-
-function MockAdminGuard({ children }) {
-    return children;
-}
 
 function AccessRestrictedPanel({ currentRole }) {
     const currentRoleLabel = STAFF_ROLE_LABELS[currentRole] || "Student";
@@ -147,22 +137,36 @@ function AccessRestrictedPanel({ currentRole }) {
     );
 }
 
-function ConvexAdminGuard({ children }) {
+/**
+ * AdminGuard now receives `adminCheck` as a prop from admin/layout.js
+ * instead of making its own duplicate `isAdmin` query.
+ * This eliminates one round-trip per admin page navigation.
+ */
+export default function AdminGuard({ children, adminCheck }) {
     const pathname = usePathname();
-    const adminCheck = useQuery(api.admin.isAdmin);
     const { user, isSignedIn } = useUser();
     const hasNotifiedRef = useRef(false);
 
+    // Client-side pre-verification for owner emails
+    const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
+    const publicOwnerEmails = (process.env.NEXT_PUBLIC_OWNER_EMAIL || "")
+        .toLowerCase()
+        .split(",")
+        .map(e => e.trim())
+        .filter(Boolean);
+    const isActuallyOwner = userEmail && publicOwnerEmails.includes(userEmail.toLowerCase());
+
     useEffect(() => {
         const isResolved = adminCheck !== undefined;
-        const isAllowed = adminCheck?.canAccessAdminPanel === true;
+        const isAllowed = adminCheck?.canAccessAdminPanel === true || isActuallyOwner;
+        
         if (!isResolved || isAllowed || !isSignedIn || hasNotifiedRef.current) {
             return;
         }
 
         hasNotifiedRef.current = true;
         const currentRoleLabel = STAFF_ROLE_LABELS[adminCheck?.role] || "Student";
-        const email = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
+        const email = userEmail;
         const notificationKey = `admin-access-notice:${pathname}:${email || "anonymous"}`;
 
         if (!sessionStorage.getItem(notificationKey)) {
@@ -174,21 +178,17 @@ function ConvexAdminGuard({ children }) {
             if (email) {
                 fetch("/api/admin-access-alert", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         email,
                         name: user?.fullName || user?.firstName || "UniSync user",
                         roleLabel: currentRoleLabel,
                         attemptedPath: pathname,
                     }),
-                }).catch(() => {
-                    // Keep the access flow resilient even if the notification email fails.
-                });
+                }).catch(() => {});
             }
         }
-    }, [adminCheck, isSignedIn, pathname, user]);
+    }, [adminCheck, isSignedIn, pathname, user, isActuallyOwner, userEmail]);
 
     if (adminCheck === undefined) {
         return (
@@ -201,16 +201,21 @@ function ConvexAdminGuard({ children }) {
         );
     }
 
-    if (!adminCheck?.canAccessAdminPanel) {
+    if (!adminCheck?.canAccessAdminPanel && !isActuallyOwner) {
         return <AccessRestrictedPanel currentRole={adminCheck?.role} />;
     }
 
-    return children;
-}
-
-export default function AdminGuard({ children }) {
-    if (isBackendEnabled) {
-        return <ConvexAdminGuard>{children}</ConvexAdminGuard>;
+    if (!adminCheck?.canAccessAdminPanel && isActuallyOwner) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#0c1222]">
+                <div className="text-center">
+                    <BarLoader width={200} color="#f97316" />
+                    <p className="text-gray-400 mt-4 font-bold uppercase tracking-widest text-[10px]">Syncing Owner Permissions...</p>
+                    <p className="text-gray-600 mt-2 text-xs">This only happens during initial session setup.</p>
+                </div>
+            </div>
+        );
     }
-    return <MockAdminGuard>{children}</MockAdminGuard>;
+
+    return children;
 }

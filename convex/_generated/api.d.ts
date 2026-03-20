@@ -12,6 +12,7 @@ import type * as admin from "../admin.js";
 import type * as adminAnalytics from "../adminAnalytics.js";
 import type * as adminEvents from "../adminEvents.js";
 import type * as adminRegistrations from "../adminRegistrations.js";
+import type * as aiEvents from "../aiEvents.js";
 import type * as dashboard from "../dashboard.js";
 import type * as devSeed from "../devSeed.js";
 import type * as eventPermissions from "../eventPermissions.js";
@@ -22,6 +23,7 @@ import type * as migrations from "../migrations.js";
 import type * as registrations from "../registrations.js";
 import type * as search from "../search.js";
 import type * as seed from "../seed.js";
+import type * as siteContent from "../siteContent.js";
 import type * as users from "../users.js";
 
 import type {
@@ -43,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   adminAnalytics: typeof adminAnalytics;
   adminEvents: typeof adminEvents;
   adminRegistrations: typeof adminRegistrations;
+  aiEvents: typeof aiEvents;
   dashboard: typeof dashboard;
   devSeed: typeof devSeed;
   eventPermissions: typeof eventPermissions;
@@ -53,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   registrations: typeof registrations;
   search: typeof search;
   seed: typeof seed;
+  siteContent: typeof siteContent;
   users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

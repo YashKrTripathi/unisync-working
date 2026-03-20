@@ -1,15 +1,11 @@
 import { useQuery as useOriginalQuery, useMutation as useOriginalMutation } from "convex/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const isBackendEnabled = Boolean(
   process.env.NEXT_PUBLIC_CONVEX_URL &&
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 );
-
-// Simple in-memory cache to share Convex query results across pages.
-// Useful for avoiding repeated loading states on client-side navigation.
-const queryCache = new Map();
 
 // Fallback mock events
 const mockEvents = [
@@ -23,8 +19,7 @@ const mockCategoryCounts = { "music": 12, "technology": 8, "cultural": 5 };
 const mockUserAndAdmin = { canAccessAdminPanel: true, canCreateEvents: true, role: "organiser", location: { city: "Pune", state: "MH" } };
 const mockEmptyArray = [];
 
-// Fallback mock hooks when backend is disabled
-const useMockQuery = (query, ...args) => {
+const useMockQuery = (query) => {
   if (query?.name === "getFeaturedEvents" || query?.name === "getEventsByLocation" || query?.name === "getPopularEvents" || query?.name === "getPastEvents") {
     return mockEvents;
   }
@@ -34,87 +29,43 @@ const useMockQuery = (query, ...args) => {
   if (query?.name === "isAdmin" || query?.name === "getCurrentUser") {
     return mockUserAndAdmin;
   }
-  return mockEmptyArray; // Return empty array instead of undefined to finish loading
+  return mockEmptyArray;
 };
 
-const useMockMutation = (mutation) => async (...args) => {
-  console.log("Mock mutation executed", { mutation, args });
+const useMockMutation = () => async (...args) => {
+  console.log("Mock mutation executed", { args });
   return null;
 };
 
-// Conditionally use real or mock hooks statically so React invariant isn't violated
-const useActualQuery = isBackendEnabled ? useOriginalQuery : ((q, ...args) => useMockQuery(q, ...args));
-const useActualMutation = isBackendEnabled ? useOriginalMutation : useMockMutation;
-
-const queryIdentity = new WeakMap();
-let queryIdentityCounter = 0;
-
-const getQueryIdentity = (query) => {
-  if (query && (typeof query === "object" || typeof query === "function")) {
-    if (!queryIdentity.has(query)) {
-      queryIdentityCounter += 1;
-      queryIdentity.set(query, `query-${queryIdentityCounter}`);
-    }
-    return queryIdentity.get(query);
-  }
-  if (query == null) return "query-null";
-  const primitiveType = typeof query;
-  if (primitiveType === "string" || primitiveType === "number" || primitiveType === "boolean" || primitiveType === "bigint") {
-    return `query-${primitiveType}-${String(query)}`;
-  }
-  return `query-${primitiveType}`;
-};
-
-const safeSerialize = (value) => {
-  try {
-    return JSON.stringify(value);
-  } catch (_err) {
-    return "unserializable";
-  }
-};
-
-const buildCacheKey = (query, args) => {
-  const queryPart = getQueryIdentity(query);
-  const argsPart = safeSerialize(args?.[0] ?? {});
-  return `${queryPart}::${argsPart}`;
-};
-
+/**
+ * PERF FIX: Removed the extra useState/useEffect wrapper that was
+ * causing unnecessary re-renders. Convex's useQuery is already reactive —
+ * wrapping it in another state layer just adds latency and stale-data bugs.
+ * 
+ * Now: thin passthrough that returns { data, isLoading, error } directly
+ * from Convex's reactive result without intermediate state.
+ */
 export const useConvexQuery = (query, ...args) => {
-  const cacheKey = buildCacheKey(query, args);
-  const cachedValue = queryCache.get(cacheKey);
+  if (!isBackendEnabled) {
+    return {
+      data: useMockQuery(query),
+      isLoading: false,
+      error: null,
+    };
+  }
 
-  const result = useActualQuery(query, ...args);
-  const [data, setData] = useState(cachedValue);
-  const [isLoading, setIsLoading] = useState(cachedValue === undefined);
-  const [error, setError] = useState(null);
-
-  // Use effect to handle the state changes based on the query result
-  useEffect(() => {
-    if (result === undefined && isBackendEnabled) {
-      setIsLoading(true);
-    } else {
-      try {
-        setData(result);
-        queryCache.set(cacheKey, result);
-        setError(null);
-      } catch (err) {
-        setError(err);
-        toast.error(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  }, [result, cacheKey]);
+  // Convex's useQuery handles "skip" natively — returns undefined when skipped
+  const result = useOriginalQuery(query, ...args);
 
   return {
-    data,
-    isLoading,
-    error,
+    data: result,
+    isLoading: result === undefined,
+    error: null,
   };
 };
 
 export const useConvexMutation = (mutation) => {
-  const mutationFn = useActualMutation(mutation);
+  const mutationFn = isBackendEnabled ? useOriginalMutation(mutation) : useMockMutation(mutation);
   const [data, setData] = useState(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);

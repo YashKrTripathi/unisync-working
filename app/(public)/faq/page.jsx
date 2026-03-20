@@ -2,32 +2,26 @@
 
 import React, { useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import { useConvexQuery } from "@/hooks/use-convex-query";
+import { api } from "@/convex/_generated/api";
+
+const DEFAULT_FAQ = {
+  heading: { prefix: "FREQ ", middle: "ASKED ", suffix: "QUES" },
+  subtitle: "Everything you need to know about UNISYNC.",
+  faqs: [
+    { q: "WHEN WILL THE TICKETS GO ON SALE?", a: "Early bird tickets will go live strictly 14 days prior to the festival date. Register on the platform to get push notifications exactly when they drop." },
+    { q: "WHAT IS THE MINIMUM AGE REQUIRED TO ENTER?", a: "UNISYNC is strictly an 18+ event. You must present valid government-issued photographic ID to prove your age upon entry." },
+    { q: "CAN I REFUND MY TICKET IF I CANNOT ATTEND?", a: "All purchased tickets are strictly non-refundable as per the organizer's terms and conditions. The name on the ticket is non-transferable." },
+    { q: "IS RE-ENTRY ALLOWED?", a: "No, once you leave the festival venue, your ticket/wristband becomes void. Re-entry requires the purchase of a new admission ticket." },
+    { q: "WHAT PAYMENT METHODS ARE ACCEPTED INSIDE?", a: "UNISYNC is a completely cashless campus experience. All food, beverage, and merchandise purchases require the UNISYNC NFC wristband." },
+  ],
+};
 
 export default function FAQPage() {
   const [openIndex, setOpenIndex] = useState(0);
-
-  const faqs = [
-    {
-      q: "WHEN WILL THE TICKETS GO ON SALE?",
-      a: "Early bird tickets will go live strictly 14 days prior to the festival date. Register on the platform to get push notifications exactly when they drop."
-    },
-    {
-      q: "WHAT IS THE MINIMUM AGE REQUIRED TO ENTER?",
-      a: "UNISYNC is strictly an 18+ event. You must present valid government-issued photographic ID to prove your age upon entry."
-    },
-    {
-      q: "CAN I REFUND MY TICKET IF I CANNOT ATTEND?",
-      a: "All purchased tickets are strictly non-refundable as per the organizer's terms and conditions. The name on the ticket is non-transferable."
-    },
-    {
-      q: "IS RE-ENTRY ALLOWED?",
-      a: "No, once you leave the festival venue, your ticket/wristband becomes void. Re-entry requires the purchase of a new admission ticket."
-    },
-    {
-      q: "WHAT PAYMENT METHODS ARE ACCEPTED INSIDE?",
-      a: "UNISYNC is a completely cashless campus experience. All food, beverage, and merchandise purchases require the UNISYNC NFC wristband."
-    }
-  ];
+  const { data: cmsContent } = useConvexQuery(api.siteContent.getPageContent, { pageId: "faq" });
+  const content = cmsContent || DEFAULT_FAQ;
+  const faqs = content.faqs || DEFAULT_FAQ.faqs;
 
   return (
     <div className="relative min-h-screen flex flex-col items-center pt-32 pb-24 px-6 md:px-10 bg-[#0a0a0a]">
@@ -35,10 +29,10 @@ export default function FAQPage() {
 
       <div className="text-center w-full max-w-7xl mx-auto mb-16 relative z-10">
         <h1 className="text-[10vw] md:text-[8vw] leading-none font-display uppercase tracking-tighter mb-4 text-white">
-          <span className="text-[var(--color-nameless-orange)]">FREQ </span> ASKED <span className="text-[var(--color-nameless-orange)]">QUES</span>
+          <span className="text-[var(--color-nameless-orange)]">{content.heading?.prefix || "FREQ "}</span>{content.heading?.middle || "ASKED "}<span className="text-[var(--color-nameless-orange)]">{content.heading?.suffix || "QUES"}</span>
         </h1>
         <p className="text-xl md:text-3xl font-serif-italic text-white/80 max-w-2xl mx-auto font-light leading-relaxed">
-          Everything you need to know about UNISYNC.
+          {content.subtitle || DEFAULT_FAQ.subtitle}
         </p>
       </div>
 

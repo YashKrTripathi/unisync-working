@@ -107,6 +107,12 @@ export default defineSchema({
         url: v.string(),
       }))),
     })),
+    // Visual Customization
+    primaryColor: v.optional(v.string()),
+    secondaryColor: v.optional(v.string()),
+    fontFamily: v.optional(v.string()),
+    layoutVariant: v.optional(v.string()), // e.g. "modern", "minimal", "vibrant"
+    customCss: v.optional(v.string()),
 
     // Event status (optional for backward compat, defaults to "approved")
     status: v.optional(
@@ -218,4 +224,12 @@ export default defineSchema({
   })
     .index("by_event", ["eventId"])
     .index("by_status", ["status"]),
+
+  // Site Content (CMS) — stores editable page content
+  siteContent: defineTable({
+    pageId: v.string(),          // e.g. "home_hero", "home_statistics", "faq", "location", "partners", "contact", "home_features"
+    content: v.string(),         // JSON-stringified content blob
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  }).index("by_page", ["pageId"]),
 });

@@ -15,6 +15,7 @@ import {
     Users,
     LogOut,
     Circle,
+    Globe,
 } from "lucide-react";
 import AdminGuard from "@/components/admin-guard";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,7 @@ const navSections = [
         label: "Settings",
         items: [
             { label: "Team", href: "/admin/team", icon: Users },
+            { label: "Site Content", href: "/admin/site-content", icon: Globe, requiresSuperAdmin: true },
             { label: "Settings", href: "/admin/settings", icon: Settings },
         ],
     },
@@ -114,6 +116,8 @@ function AdminSidebar({ pathname, collapsed, setCollapsed, adminCheck }) {
                             </p>
                         )}
                         {section.items.map((item) => {
+                            // Hide items that require superadmin unless user has superadmin/owner role
+                            if (item.requiresSuperAdmin && !adminCheck?.isSuperAdmin) return null;
                             const isActive = pathname === item.href ||
                                 (item.href !== "/admin" && pathname?.startsWith(item.href));
                             return (
@@ -155,7 +159,7 @@ function AdminSidebar({ pathname, collapsed, setCollapsed, adminCheck }) {
 
 function AdminLayoutUI({ pathname, collapsed, setCollapsed, adminCheck, children }) {
     return (
-        <AdminGuard>
+        <AdminGuard adminCheck={adminCheck}>
             <div className="flex min-h-screen bg-[#0c0c0c]">
                 <AdminSidebar
                     pathname={pathname}

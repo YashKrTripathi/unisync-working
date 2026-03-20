@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -36,7 +37,7 @@ import {
     Legend,
 } from "recharts";
 
-// ─── Color palette for charts ───────────────────────────────────────────────
+// â”€â”€â”€ Color palette for charts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const COLORS = [
     "#a855f7", // purple
     "#3b82f6", // blue
@@ -50,7 +51,7 @@ const COLORS = [
     "#f97316", // orange
 ];
 
-// ─── Custom tooltip ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Custom tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CustomTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null;
     return (
@@ -65,14 +66,14 @@ function CustomTooltip({ active, payload, label }) {
     );
 }
 
-// ─── Format currency ────────────────────────────────────────────────────────
+// â”€â”€â”€ Format currency â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function formatCurrency(amount) {
-    if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-    if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
-    return `₹${amount}`;
+    if (amount >= 100000) return `â‚¹${(amount / 100000).toFixed(1)}L`;
+    if (amount >= 1000) return `â‚¹${(amount / 1000).toFixed(1)}K`;
+    return `â‚¹${amount}`;
 }
 
-// ─── Stat card ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StatCard({ label, value, icon: Icon, growth, suffix = "", color = "purple" }) {
     const colorMap = {
         purple: "from-purple-500/20 to-purple-600/5 border-purple-500/30",
@@ -126,7 +127,7 @@ function StatCard({ label, value, icon: Icon, growth, suffix = "", color = "purp
     );
 }
 
-// ─── Chart card wrapper ─────────────────────────────────────────────────────
+// â”€â”€â”€ Chart card wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ChartCard({ title, icon: Icon, children, className = "" }) {
     return (
         <div className={`bg-gray-900/60 border border-gray-800 rounded-xl p-5 ${className}`}>
@@ -139,7 +140,7 @@ function ChartCard({ title, icon: Icon, children, className = "" }) {
     );
 }
 
-// ─── Aggregated analytics tab ──────────────────────────────────────────────
+// â”€â”€â”€ Aggregated analytics tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AggregatedAnalytics() {
     const adminCheck = useQuery(api.admin.isAdmin);
     const isAdmin = adminCheck?.canAccessAdminPanel === true;
@@ -303,7 +304,7 @@ function AggregatedAnalytics() {
                                 />
                                 <Tooltip
                                     content={<CustomTooltip />}
-                                    formatter={(value) => [`₹${value.toLocaleString()}`, "Revenue"]}
+                                    formatter={(value) => [`â‚¹${value.toLocaleString()}`, "Revenue"]}
                                 />
                                 <Bar
                                     dataKey="value"
@@ -320,7 +321,7 @@ function AggregatedAnalytics() {
     );
 }
 
-// ─── Event-wise analytics tab ───────────────────────────────────────────────
+// â”€â”€â”€ Event-wise analytics tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function EventWiseAnalytics() {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const adminCheck = useQuery(api.admin.isAdmin);
@@ -339,28 +340,114 @@ function EventWiseAnalytics() {
         );
     }
 
+    const selectedEventMeta =
+        eventList.find((event) => event._id === selectedEvent) || null;
+
     return (
         <div className="space-y-6">
-            {/* Event selector */}
-            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4">
-                <label className="block text-xs text-gray-400 uppercase tracking-wider font-medium mb-2">
-                    Select Event
-                </label>
-                <select
-                    value={selectedEvent || ""}
-                    onChange={(e) => setSelectedEvent(e.target.value || null)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                    <option value="">Choose an event...</option>
-                    {eventList.map((ev) => (
-                        <option key={ev._id} value={ev._id}>
-                            {ev.title} — {new Date(ev.startDate).toLocaleDateString()}
-                        </option>
-                    ))}
-                </select>
+            <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-4 sm:p-5">
+                <div className="grid gap-5 xl:grid-cols-[320px_1fr]">
+                    <div className="space-y-4">
+                        <div>
+                            <p className="text-[11px] uppercase tracking-[0.24em] text-purple-300/80">Select Event</p>
+                            <h3 className="mt-2 text-xl font-semibold text-white">Event-wise analytics</h3>
+                            <p className="mt-1 text-sm text-gray-400">
+                                Pick an event to inspect registrations, attendance, ownership, and revenue in one place.
+                            </p>
+                        </div>
+
+                        <select
+                            value={selectedEvent || ""}
+                            onChange={(e) => setSelectedEvent(e.target.value || null)}
+                            className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                            <option value="">Choose an event...</option>
+                            {eventList.map((ev) => (
+                                <option key={ev._id} value={ev._id}>
+                                    {ev.title} - {new Date(ev.startDate).toLocaleDateString()}
+                                </option>
+                            ))}
+                        </select>
+
+                        {selectedEventMeta && (
+                            <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 p-4">
+                                <p className="text-xs uppercase tracking-[0.2em] text-purple-200/80">Current focus</p>
+                                <p className="mt-2 text-base font-semibold text-white">{selectedEventMeta.title}</p>
+                                <p className="mt-1 text-sm text-gray-400">
+                                    {format(new Date(selectedEventMeta.startDate), "MMM d, yyyy")}
+                                    {selectedEventMeta.endDate
+                                        ? ` - ${format(new Date(selectedEventMeta.endDate), "MMM d, yyyy")}`
+                                        : ""}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                        {eventList.map((event) => {
+                            const adminNames = (event.eventAdmins || []).map((admin) => admin.name);
+                            const isSelected = selectedEvent === event._id;
+
+                            return (
+                                <button
+                                    key={event._id}
+                                    type="button"
+                                    onClick={() => setSelectedEvent(event._id)}
+                                    className={`overflow-hidden rounded-2xl border text-left transition-all ${
+                                        isSelected
+                                            ? "border-purple-400/60 bg-purple-500/10 shadow-lg shadow-purple-500/10"
+                                            : "border-gray-800 bg-gray-950/60 hover:border-gray-700 hover:bg-gray-900/80"
+                                    }`}
+                                >
+                                    <div className="relative h-36 w-full overflow-hidden bg-gradient-to-br from-purple-900/40 via-gray-900 to-gray-950">
+                                        {event.coverImage ? (
+                                            <Image
+                                                src={event.coverImage}
+                                                alt={event.title}
+                                                fill
+                                                className="object-cover"
+                                                sizes="(max-width: 1536px) 50vw, 33vw"
+                                            />
+                                        ) : (
+                                            <div className="flex h-full items-end bg-[radial-gradient(circle_at_top_left,_rgba(168,85,247,0.28),_transparent_45%),linear-gradient(135deg,rgba(17,24,39,0.92),rgba(2,6,23,0.98))] p-4">
+                                                <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-purple-100">
+                                                    {event.category}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
+                                            <span className="rounded-full border border-black/20 bg-black/40 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white/85 backdrop-blur">
+                                                {event.status}
+                                            </span>
+                                        </div>
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent p-4">
+                                            <p className="text-base font-semibold text-white">{event.title}</p>
+                                            <p className="mt-1 text-xs text-white/70">
+                                                {format(new Date(event.startDate), "MMM d, yyyy")}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 p-4">
+                                        <div>
+                                            <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Organizer</p>
+                                            <p className="mt-1 text-sm text-gray-100">{event.organizerName || "Unknown organizer"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">In-charge / manager</p>
+                                            <p className="mt-1 text-sm text-gray-300">
+                                                {adminNames.length > 0 ? adminNames.join(", ") : "Not assigned"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
-            {/* No event selected */}
             {!selectedEvent && (
                 <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-12 text-center">
                     <BarChart3 className="w-10 h-10 text-gray-600 mx-auto mb-3" />
@@ -368,40 +455,76 @@ function EventWiseAnalytics() {
                 </div>
             )}
 
-            {/* Loading selected event */}
             {selectedEvent && !eventData && (
                 <div className="flex justify-center py-12">
                     <BarLoader width={200} color="#a855f7" />
                 </div>
             )}
 
-            {/* Event analytics */}
             {eventData && (
                 <>
-                    {/* Event header */}
-                    <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                            <div>
-                                <h3 className="text-lg font-bold text-white">{eventData.event.title}</h3>
-                                <p className="text-gray-400 text-sm mt-0.5">
-                                    {format(new Date(eventData.event.startDate), "MMM d, yyyy")} — {format(new Date(eventData.event.endDate), "MMM d, yyyy")}
-                                    <span className="ml-2 capitalize text-gray-500">• {eventData.event.category}</span>
-                                </p>
+                    <div className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden">
+                        <div className="grid gap-0 lg:grid-cols-[260px_1fr]">
+                            <div className="relative min-h-[220px] bg-gradient-to-br from-purple-900/35 via-slate-900 to-black">
+                                {eventData.event.coverImage ? (
+                                    <Image
+                                        src={eventData.event.coverImage}
+                                        alt={eventData.event.title}
+                                        fill
+                                        className="object-cover"
+                                        sizes="260px"
+                                    />
+                                ) : (
+                                    <div className="flex h-full items-end bg-[radial-gradient(circle_at_top_left,_rgba(168,85,247,0.28),_transparent_45%),linear-gradient(135deg,rgba(17,24,39,0.92),rgba(2,6,23,0.98))] p-5">
+                                        <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-purple-100">
+                                            {eventData.event.category}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <div className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${eventData.event.status === "live"
-                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                    : eventData.event.status === "approved"
-                                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                        : eventData.event.status === "completed"
-                                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                                            : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
-                                }`}>
-                                {eventData.event.status}
+
+                            <div className="p-5 sm:p-6">
+                                <div className="flex items-center justify-between flex-wrap gap-3">
+                                    <div>
+                                        <p className="text-[11px] uppercase tracking-[0.24em] text-purple-300/80">Selected event</p>
+                                        <h3 className="mt-2 text-2xl font-bold text-white">{eventData.event.title}</h3>
+                                        <p className="text-gray-400 text-sm mt-1">
+                                            {format(new Date(eventData.event.startDate), "MMM d, yyyy")} - {format(new Date(eventData.event.endDate), "MMM d, yyyy")}
+                                            <span className="ml-2 capitalize text-gray-500">• {eventData.event.category}</span>
+                                        </p>
+                                    </div>
+                                    <div className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${eventData.event.status === "live"
+                                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                            : eventData.event.status === "approved"
+                                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                                : eventData.event.status === "completed"
+                                                    ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                                                    : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                                        }`}>
+                                        {eventData.event.status}
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                                    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                                        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Organizer</p>
+                                        <p className="mt-2 text-base font-medium text-white">
+                                            {eventData.event.organizerName || "Unknown organizer"}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                                        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Admin / manager</p>
+                                        <p className="mt-2 text-base font-medium text-white">
+                                            {eventData.event.eventAdmins?.length
+                                                ? eventData.event.eventAdmins.map((admin) => admin.name).join(", ")
+                                                : "Not assigned"}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Stats row */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <StatCard
                             label="Registered"
@@ -430,7 +553,6 @@ function EventWiseAnalytics() {
                         />
                     </div>
 
-                    {/* Additional metrics */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex items-center gap-3">
                             <div className="p-2 bg-purple-500/20 rounded-lg">
@@ -448,7 +570,7 @@ function EventWiseAnalytics() {
                             </div>
                             <div>
                                 <p className="text-xs text-gray-400">Peak Day</p>
-                                <p className="text-lg font-bold text-white">{eventData.peakDay || "—"}</p>
+                                <p className="text-lg font-bold text-white">{eventData.peakDay || "-"}</p>
                                 <p className="text-xs text-gray-500">{eventData.peakCount} registrations</p>
                             </div>
                         </div>
@@ -551,8 +673,7 @@ function EventWiseAnalytics() {
         </div>
     );
 }
-
-// ─── Main analytics page ────────────────────────────────────────────────────
+// â”€â”€â”€ Main analytics page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AnalyticsAdminPage() {
     const [activeTab, setActiveTab] = useState("aggregated");
 

@@ -19,13 +19,17 @@ export const getEventList = query({
     handler: async (ctx) => {
         const auth = await requireAdmin(ctx);
         if (!auth) return [];
-        const events = await ctx.db.query("events").order("desc").collect();
+        const events = await ctx.db.query("events").order("desc").take(300);
         return events.map((e) => ({
             _id: e._id,
             title: e.title,
             startDate: e.startDate,
+            endDate: e.endDate,
             category: e.category,
             status: e.status || "approved",
+            coverImage: e.coverImage || null,
+            organizerName: e.organizerName,
+            eventAdmins: e.eventAdmins || [],
         }));
     },
 });
@@ -36,8 +40,8 @@ export const getAggregatedAnalytics = query({
         const auth = await requireAdmin(ctx);
         if (!auth) return null;
 
-        const allEvents = await ctx.db.query("events").collect();
-        const allRegistrations = await ctx.db.query("registrations").collect();
+        const allEvents = await ctx.db.query("events").take(500);
+        const allRegistrations = await ctx.db.query("registrations").take(10000);
 
         // 1. Total counts
         const totalEvents = allEvents.length;
@@ -218,7 +222,7 @@ export const getEventAnalytics = query({
         const registrations = await ctx.db
             .query("registrations")
             .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
-            .collect();
+            .take(event.capacity || 5000);
 
         const confirmed = registrations.filter(
             (r) => r.status === "confirmed"
@@ -299,6 +303,9 @@ export const getEventAnalytics = query({
                 ticketType: event.ticketType,
                 ticketPrice: event.ticketPrice,
                 status: event.status || "approved",
+                coverImage: event.coverImage || null,
+                organizerName: event.organizerName,
+                eventAdmins: event.eventAdmins || [],
             },
             totalRegistered,
             totalAttended,
@@ -351,7 +358,7 @@ export const getReportsOverview = query({
             1
         ).getTime();
 
-        const allEvents = await ctx.db.query("events").collect();
+        const allEvents = await ctx.db.query("events").take(500);
         const eligibleEvents = allEvents.filter((event) => {
             const status = event.status || "approved";
             if (status === "cancelled" || status === "draft" || status === "pending") {
@@ -367,7 +374,7 @@ export const getReportsOverview = query({
         });
 
         const ids = new Set(eligibleEvents.map((event) => event._id));
-        const allRegistrations = await ctx.db.query("registrations").collect();
+        const allRegistrations = await ctx.db.query("registrations").take(10000);
         const registrations = allRegistrations.filter(
             (registration) =>
                 ids.has(registration.eventId) && registration.status === "confirmed"

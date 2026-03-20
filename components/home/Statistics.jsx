@@ -2,29 +2,19 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import ScrollReveal from "@/components/scroll-reveal";
+import { useConvexQuery } from "@/hooks/use-convex-query";
+import { api } from "@/convex/_generated/api";
 
-const stats = [
-    {
-        value: 120,
-        suffix: "+",
-        label: "EVENTS HOSTED",
-    },
-    {
-        value: 12450,
-        suffix: "+",
-        label: "ACTIVE STUDENTS",
-    },
-    {
-        value: 12,
-        suffix: "",
-        label: "DEPARTMENTS",
-    },
-    {
-        value: 95,
-        suffix: "%",
-        label: "ENGAGEMENT RATE",
-    },
-];
+const DEFAULT_STATS = {
+  sectionHeading: "IMPACT",
+  sectionSubheading: "Numbers speak louder than words. Discover how our platform is uniting the entire campus ecosystem.",
+  stats: [
+    { value: 120, suffix: "+", label: "EVENTS HOSTED" },
+    { value: 12450, suffix: "+", label: "ACTIVE STUDENTS" },
+    { value: 12, suffix: "", label: "DEPARTMENTS" },
+    { value: 95, suffix: "%", label: "ENGAGEMENT RATE" },
+  ],
+};
 
 function AnimatedCounter({ target, suffix, duration = 2500 }) {
     const [count, setCount] = useState(0);
@@ -41,7 +31,6 @@ function AnimatedCounter({ target, suffix, duration = 2500 }) {
                     const animate = (currentTime) => {
                         const elapsed = currentTime - startTime;
                         const progress = Math.min(elapsed / duration, 1);
-                        // Ease out quint
                         const eased = 1 - Math.pow(1 - progress, 5);
                         setCount(Math.floor(eased * target));
                         if (progress < 1) {
@@ -67,18 +56,22 @@ function AnimatedCounter({ target, suffix, duration = 2500 }) {
 }
 
 export default function Statistics() {
+    const { data: cmsContent } = useConvexQuery(api.siteContent.getPageContent, { pageId: "home_statistics" });
+    const content = cmsContent || DEFAULT_STATS;
+    const stats = content.stats || DEFAULT_STATS.stats;
+
     return (
         <section className="py-32 relative bg-[var(--color-nameless-orange)] w-full">
             <div className="max-w-[1400px] mx-auto px-6 relative z-10">
                 <div className="flex flex-col md:flex-row gap-12 justify-between items-start mb-24">
                     <ScrollReveal blur y={24} delay={0} className="md:w-1/2">
                         <h2 className="text-[12vw] md:text-[8vw] font-display text-black uppercase tracking-tighter leading-none">
-                            IMPACT
+                            {content.sectionHeading || "IMPACT"}
                         </h2>
                     </ScrollReveal>
                     <ScrollReveal y={32} delay={150} className="md:w-1/2 md:pt-8 flex flex-col items-center md:items-end w-full">
                         <p className="font-serif-italic text-black text-2xl md:text-3xl text-left md:text-right leading-relaxed font-bold">
-                            Numbers speak louder than words. Discover how our platform is uniting the entire campus ecosystem.
+                            {content.sectionSubheading || DEFAULT_STATS.sectionSubheading}
                         </p>
                     </ScrollReveal>
                 </div>

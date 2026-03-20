@@ -2,7 +2,7 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
-// Get all organiser users (for team management)
+// Get all organiser users (for team management) — uses by_role index
 export const getAdminUsers = query({
     handler: async (ctx) => {
         const user = await ctx.runQuery(internal.users.getCurrentUser);
@@ -11,12 +11,18 @@ export const getAdminUsers = query({
             return [];
         }
 
+        // Use index instead of collecting all users
         const organisers = await ctx.db
             .query("users")
-            .collect()
-            .then((users) =>
-                users.filter((u) => ["organiser", "superadmin", "owner"].includes(u.role || "student"))
-            );
+            .withIndex("by_role")
+            .filter((q) =>
+                q.or(
+                    q.eq(q.field("role"), "organiser"),
+                    q.eq(q.field("role"), "superadmin"),
+                    q.eq(q.field("role"), "owner")
+                )
+            )
+            .take(100);
 
         return organisers;
     },
@@ -35,9 +41,19 @@ export const isAdmin = query({
             )
             .unique();
 
-        if (!user) return { isAdmin: false, canAccessAdminPanel: false, canCreateEvents: false, role: null };
+        const ownerEmails = (
+            process.env.OWNER_EMAILS ||
+            process.env.OWNER_EMAIL ||
+            ""
+        )
+            .toLowerCase()
+            .split(",")
+            .map((e) => e.trim())
+            .filter(Boolean);
 
-        const role = user.role || "student";
+        const isOwnerByEmail = identity.email && ownerEmails.includes(identity.email.toLowerCase());
+        const role = isOwnerByEmail ? "owner" : (user?.role || "student");
+
         return {
             isStudent: role === "student",
             isOrganiser: role === "organiser",
@@ -48,7 +64,7 @@ export const isAdmin = query({
             canCreateEvents: ["organiser", "superadmin", "owner"].includes(role),
             role,
             roleLabel: role === "owner" ? "owner" : role === "superadmin" ? "superadmin" : role,
-            user,
+            user: user || { name: identity.name, email: identity.email },
         };
     },
 });
@@ -70,12 +86,10 @@ export const setUserRole = mutation({
             throw new Error("Unauthorized: Only Owner/Superadmin can change roles");
         }
 
-        // Only the owner can promote/demote to superadmin
         if (args.role === "superadmin" && role !== "owner") {
             throw new Error("Only the Owner can assign superadmin");
         }
 
-        // Protect owner account from being overwritten
         const target = await ctx.db.get(args.userId);
         if (target?.role === "owner") {
             throw new Error("Owner role cannot be changed");
@@ -90,25 +104,21 @@ export const setUserRole = mutation({
     },
 });
 
-// Get aggregated dashboard stats (for organiser dashboard)
+// Get aggregated dashboard stats — bounded queries instead of full scans
 export const getDashboardStats = query({
     handler: async (ctx) => {
         const user = await ctx.runQuery(internal.users.getCurrentUser);
         const role = user?.role || "student";
-        if (!user || role !== "organiser") {
+        if (!user || !["organiser", "superadmin", "owner"].includes(role)) {
             return null;
         }
-
-        // Get all events
-        const allEvents = await ctx.db.query("events").collect();
-
-        // Get all registrations
-        const allRegistrations = await ctx.db.query("registrations").collect();
 
         const now = Date.now();
         const sevenDaysFromNow = now + 7 * 24 * 60 * 60 * 1000;
 
-        // Live/Active events
+        // Use bounded queries instead of collecting everything
+        const allEvents = await ctx.db.query("events").withIndex("by_start_date").take(500);
+
         const liveEvents = allEvents.filter(
             (e) => e.startDate <= now && e.endDate >= now
         );
@@ -116,42 +126,46 @@ export const getDashboardStats = query({
             (e) => e.startDate > now && e.startDate <= sevenDaysFromNow
         );
 
-        // Aggregated revenue
+        // For revenue, only query paid events' registrations (targeted)
         let totalRevenue = 0;
-        for (const event of allEvents) {
-            if (event.ticketType === "paid" && event.ticketPrice) {
-                const eventRegs = allRegistrations.filter(
-                    (r) => r.eventId === event._id && r.status === "confirmed" && r.checkedIn
-                );
-                totalRevenue += eventRegs.length * event.ticketPrice;
-            }
-        }
+        let monthlyRevenue = 0;
+        let totalRegistrations = 0;
+        let totalCheckedIn = 0;
 
-        // Monthly revenue
         const thisMonthStart = new Date();
         thisMonthStart.setDate(1);
         thisMonthStart.setHours(0, 0, 0, 0);
-        const monthlyRevenue = allEvents.reduce((sum, event) => {
-            if (event.ticketType === "paid" && event.ticketPrice) {
-                const eventRegs = allRegistrations.filter(
-                    (r) =>
-                        r.eventId === event._id &&
-                        r.status === "confirmed" &&
-                        r.checkedIn &&
-                        r.registeredAt >= thisMonthStart.getTime()
-                );
-                return sum + eventRegs.length * event.ticketPrice;
-            }
-            return sum;
-        }, 0);
+        const monthStartMs = thisMonthStart.getTime();
 
-        // Registration stats
-        const totalRegistrations = allRegistrations.filter(
-            (r) => r.status === "confirmed"
-        ).length;
-        const totalCheckedIn = allRegistrations.filter(
-            (r) => r.checkedIn && r.status === "confirmed"
-        ).length;
+        const paidEvents = allEvents.filter(
+            (e) => e.ticketType === "paid" && e.ticketPrice
+        );
+
+        // Process registrations per event (indexed) instead of scanning all
+        for (const event of paidEvents) {
+            const regs = await ctx.db
+                .query("registrations")
+                .withIndex("by_event", (q) => q.eq("eventId", event._id))
+                .filter((q) =>
+                    q.and(
+                        q.eq(q.field("status"), "confirmed"),
+                        q.eq(q.field("checkedIn"), true)
+                    )
+                )
+                .take(event.capacity || 5000);
+
+            totalRevenue += regs.length * event.ticketPrice;
+
+            const monthlyRegs = regs.filter(
+                (r) => r.registeredAt >= monthStartMs
+            );
+            monthlyRevenue += monthlyRegs.length * event.ticketPrice;
+        }
+
+        // Overall registration counts (bounded)
+        const allRegs = await ctx.db.query("registrations").take(10000);
+        totalRegistrations = allRegs.filter((r) => r.status === "confirmed").length;
+        totalCheckedIn = allRegs.filter((r) => r.checkedIn && r.status === "confirmed").length;
 
         return {
             liveEvents,

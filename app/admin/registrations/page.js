@@ -114,6 +114,36 @@ export default function RegistrationsAdminPage() {
         return list;
     }, [data, activeTab, eventFilter, searchTerm]);
 
+    const scopedStats = useMemo(() => {
+        if (!data) {
+            return { total: 0, confirmed: 0, cancelled: 0, checkedIn: 0 };
+        }
+
+        const scopedRegistrations =
+            eventFilter === "all"
+                ? data.registrations
+                : data.registrations.filter((registration) => registration.eventId === eventFilter);
+
+        return {
+            total: scopedRegistrations.length,
+            confirmed: scopedRegistrations.filter((registration) => registration.status === "confirmed").length,
+            cancelled: scopedRegistrations.filter((registration) => registration.status === "cancelled").length,
+            checkedIn: scopedRegistrations.filter((registration) => registration.checkedIn).length,
+        };
+    }, [data, eventFilter]);
+
+    const selectedEventMeta = useMemo(() => {
+        if (!data || eventFilter === "all") return null;
+        const registration = data.registrations.find((item) => item.eventId === eventFilter);
+        if (!registration) return null;
+
+        return {
+            title: registration.eventTitle,
+            eventDate: registration.eventDate,
+            registrationCount: data.registrations.filter((item) => item.eventId === eventFilter).length,
+        };
+    }, [data, eventFilter]);
+
     // Actions
     async function handleCancel(regId) {
         if (!confirm("Cancel this registration? This will decrement the event count.")) return;
@@ -150,9 +180,9 @@ export default function RegistrationsAdminPage() {
     }
 
     const tabs = [
-        { id: "all", label: "All", count: data.stats.total },
-        { id: "confirmed", label: "Confirmed", count: data.stats.confirmed },
-        { id: "cancelled", label: "Cancelled", count: data.stats.cancelled },
+        { id: "all", label: "All", count: scopedStats.total },
+        { id: "confirmed", label: "Confirmed", count: scopedStats.confirmed },
+        { id: "cancelled", label: "Cancelled", count: scopedStats.cancelled },
     ];
 
     return (
@@ -162,12 +192,58 @@ export default function RegistrationsAdminPage() {
                 <p className="text-gray-400 text-sm mt-1">Manage all event registrations across the platform</p>
             </div>
 
+            <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-4 sm:p-5 mb-6">
+                <div className="grid gap-4 lg:grid-cols-[minmax(280px,360px)_1fr] lg:items-end">
+                    <div className="space-y-2">
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-purple-300/80">Event Focus</p>
+                        <h2 className="text-lg font-semibold text-white">
+                            {selectedEventMeta ? selectedEventMeta.title : "All events"}
+                        </h2>
+                        <p className="text-sm text-gray-400">
+                            {selectedEventMeta
+                                ? "Inspect one event's registrations and status breakdown without the noise from the rest of the platform."
+                                : "Choose a specific event to narrow the summary cards, tabs, and registrations table to just that event."}
+                        </p>
+                        {selectedEventMeta && (
+                            <div className="flex flex-wrap gap-2 pt-1">
+                                {selectedEventMeta.eventDate && (
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300">
+                                        <Calendar className="h-3.5 w-3.5 text-purple-300" />
+                                        {format(new Date(selectedEventMeta.eventDate), "MMM d, yyyy")}
+                                    </span>
+                                )}
+                                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300">
+                                    <Users className="h-3.5 w-3.5 text-blue-300" />
+                                    {selectedEventMeta.registrationCount} registration{selectedEventMeta.registrationCount === 1 ? "" : "s"}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="relative">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <select
+                            value={eventFilter}
+                            onChange={(e) => setEventFilter(e.target.value)}
+                            className="w-full bg-gray-950/70 border border-gray-700 rounded-xl pl-10 pr-8 py-3 text-sm text-white appearance-none cursor-pointer focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                            <option value="all">All Events</option>
+                            {eventOptions.map((ev) => (
+                                <option key={ev.id} value={ev.id}>
+                                    {ev.title}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             {/* Stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <StatCard label="Total" value={data.stats.total} icon={Users} color="purple" />
-                <StatCard label="Confirmed" value={data.stats.confirmed} icon={CheckCircle2} color="green" />
-                <StatCard label="Cancelled" value={data.stats.cancelled} icon={XCircle} color="red" />
-                <StatCard label="Checked In" value={data.stats.checkedIn} icon={UserCheck} color="blue" />
+                <StatCard label="Total" value={scopedStats.total} icon={Users} color="purple" />
+                <StatCard label="Confirmed" value={scopedStats.confirmed} icon={CheckCircle2} color="green" />
+                <StatCard label="Cancelled" value={scopedStats.cancelled} icon={XCircle} color="red" />
+                <StatCard label="Checked In" value={scopedStats.checkedIn} icon={UserCheck} color="blue" />
             </div>
 
             {/* Tabs */}
@@ -202,21 +278,15 @@ export default function RegistrationsAdminPage() {
                         className="w-full bg-gray-900/60 border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
                 </div>
-                <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <select
-                        value={eventFilter}
-                        onChange={(e) => setEventFilter(e.target.value)}
-                        className="bg-gray-900/60 border border-gray-800 rounded-lg pl-10 pr-8 py-2.5 text-sm text-white appearance-none cursor-pointer focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[200px]"
-                    >
-                        <option value="all">All Events</option>
-                        {eventOptions.map((ev) => (
-                            <option key={ev.id} value={ev.id}>
-                                {ev.title}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {selectedEventMeta ? (
+                    <div className="inline-flex items-center rounded-lg border border-purple-500/20 bg-purple-500/10 px-4 py-2.5 text-sm text-purple-100">
+                        Focused event view
+                    </div>
+                ) : (
+                    <div className="inline-flex items-center rounded-lg border border-gray-800 bg-gray-900/60 px-4 py-2.5 text-sm text-gray-400">
+                        Viewing all events
+                    </div>
+                )}
             </div>
 
             {/* Results count */}

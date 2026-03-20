@@ -1,8 +1,12 @@
-export default {
+const authConfig = {
   providers: [
     {
-      domain: "https://adjusted-cougar-32.clerk.accounts.dev",
+      domain:
+        process.env.CLERK_JWT_ISSUER_DOMAIN ||
+        "https://adjusted-cougar-32.clerk.accounts.dev",
       applicationID: "convex",
     },
   ],
 };
+
+export default authConfig;

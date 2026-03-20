@@ -31,8 +31,8 @@ export default function PitchEventPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_16%,rgba(255,77,155,0.2),transparent_28%),radial-gradient(circle_at_84%_18%,rgba(70,230,255,0.14),transparent_24%),radial-gradient(circle_at_50%_88%,rgba(132,66,255,0.16),transparent_28%),linear-gradient(180deg,#07070b_0%,#0a0810_48%,#06050a_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-35 [background:linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:52px_52px]" />
 
-      <section className="relative grid min-h-[78vh] items-end gap-10 rounded-[36px] border border-white/12 bg-black/35 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.26)] backdrop-blur-2xl lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
-        <div>
+      <section className="relative rounded-[36px] border border-white/12 bg-black/35 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.26)] backdrop-blur-2xl lg:p-10">
+        <div className="max-w-4xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/[0.04] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-white/72">
             <Sparkles className="h-3.5 w-3.5 text-[#ec4899]" />
             New Event Intake
@@ -51,7 +51,7 @@ export default function PitchEventPage() {
             use this dedicated pitch flow built for both university organisers and outside collaborators.
           </p>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
             <AnimatedArrowButton
               href="/contact-us"
               icon="left"
@@ -67,18 +67,22 @@ export default function PitchEventPage() {
           </div>
         </div>
 
-        <div className="grid gap-4">
+        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {audienceCards.map((card) => {
             const Icon = card.icon;
             return (
-              <article key={card.title} className="rounded-[26px] border border-white/12 bg-white/[0.04] p-5">
-                <div className="flex items-start gap-4">
+              <article
+                key={card.title}
+                className="h-full rounded-[28px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+              >
+                <div className="flex h-full flex-col">
                   <div className="inline-flex h-12 w-12 items-center justify-center rounded-[16px] bg-white text-black">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-white">{card.title}</h2>
-                    <p className="mt-2 text-sm leading-7 text-white/68">{card.description}</p>
+                  <div className="mt-6 min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/42">Who this is for</p>
+                    <h2 className="mt-3 text-2xl font-semibold text-white">{card.title}</h2>
+                    <p className="mt-3 break-words text-sm leading-7 text-white/68">{card.description}</p>
                   </div>
                 </div>
               </article>
@@ -87,8 +91,8 @@ export default function PitchEventPage() {
         </div>
       </section>
 
-      <section className="relative mt-8 grid gap-8 rounded-[36px] border border-white/12 bg-black/35 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-2xl lg:grid-cols-[1fr_0.85fr] lg:p-10">
-        <div>
+      <section className="relative mt-8 rounded-[36px] border border-white/12 bg-black/35 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-2xl lg:p-10">
+        <div className="max-w-4xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-white/48">Pitch Form</p>
           <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">Tell us what should exist next.</h2>
           <p className="mt-4 max-w-2xl text-base leading-8 text-white/68">
@@ -112,8 +116,17 @@ export default function PitchEventPage() {
           </div>
         </div>
 
-        <div className="rounded-[30px] border border-white/12 bg-[#0c0b11]/92 p-6">
-          <PitchEventForm />
+        <div className="mt-8 overflow-hidden rounded-[34px] border border-white/12 bg-[#0c0b11]/94 shadow-[0_24px_80px_rgba(0,0,0,0.38)]">
+          <div className="border-b border-white/8 bg-[linear-gradient(135deg,rgba(70,230,255,0.08),rgba(255,77,155,0.06),rgba(255,255,255,0.02))] px-6 py-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-white/42">Start Here</p>
+            <h3 className="mt-3 text-2xl font-semibold text-white">Build your pitch in one pass.</h3>
+            <p className="mt-2 max-w-xl text-sm leading-7 text-white/64">
+              The form is split into three simple parts so you always know what to do next: who is pitching, what the event is, and why UniSync should back it.
+            </p>
+          </div>
+          <div className="p-6 sm:p-7">
+            <PitchEventForm />
+          </div>
         </div>
       </section>
 

@@ -67,10 +67,19 @@ export default function EventDetailPage({ params }) {
   return (
     <div className="space-y-6">
       <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(30,64,175,0.9))] p-6 text-white">
-        <Link href="/admin/events" className="inline-flex items-center gap-2 text-sm text-slate-200 transition hover:text-white">
-          <ArrowLeft className="h-4 w-4" />
-          Back to events
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/admin/events" className="inline-flex items-center gap-2 text-sm text-slate-200 transition hover:text-white">
+            <ArrowLeft className="h-4 w-4" />
+            Back to events
+          </Link>
+          <Link 
+            href={`/admin/events/${id}/studio`}
+            className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#ff6b1a,#ff8c00)] px-4 py-1.5 text-xs font-bold text-white shadow-lg transition-all hover:scale-[1.03] hover:brightness-110 active:scale-[0.98]"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            OPEN CREATIVE STUDIO
+          </Link>
+        </div>
         <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="text-3xl font-semibold">{eventData.title}</h1>

@@ -100,7 +100,15 @@ export const getAllProposals = query({
     const user = await requireAdmin(ctx);
     if (!user) return [];
 
-    let proposals = await ctx.db.query("eventProposals").order("desc").collect();
+    const isOwner = ["owner", "superadmin"].includes(user.role);
+    const isOrganiser = user.role === "organiser";
+
+    let proposals = await ctx.db.query("eventProposals").order("desc").take(500);
+
+    // If organiser, only show their own proposals
+    if (isOrganiser && !isOwner) {
+      proposals = proposals.filter((proposal) => proposal.proposerId === user._id);
+    }
 
     if (args.status && args.status !== "all") {
       proposals = proposals.filter((proposal) => proposal.status === args.status);
@@ -129,12 +137,23 @@ export const getAllEvents = query({
     const user = await requireAdmin(ctx);
     if (!user) return [];
 
+    const isOwner = ["owner", "superadmin"].includes(user.role);
+    const isOrganiser = user.role === "organiser";
+
     let events = args.searchTerm?.trim()
       ? await ctx.db
           .query("events")
           .withSearchIndex("search_title", (q) => q.search("title", args.searchTerm))
-          .collect()
-      : await ctx.db.query("events").order("desc").collect();
+          .take(200)
+      : await ctx.db.query("events").order("desc").take(500);
+
+    // If organiser, only show events they organize or are admins for
+    if (isOrganiser && !isOwner) {
+      events = events.filter((event) => 
+        event.organizerId === user._id || 
+        (event.eventAdmins || []).some(admin => admin.userId === user._id)
+      );
+    }
 
     if (args.status && args.status !== "all") {
       events = events.filter((event) => (event.status || "approved") === args.status);
@@ -144,17 +163,22 @@ export const getAllEvents = query({
       events = events.filter((event) => event.category === args.category);
     }
 
-    const registrations = await ctx.db.query("registrations").collect();
-    const requests = await ctx.db.query("eventChangeRequests").collect();
+    // Per-event indexed queries instead of full table scans
+    const results = [];
+    for (const event of events) {
+      const regs = await ctx.db
+        .query("registrations")
+        .withIndex("by_event", (q) => q.eq("eventId", event._id))
+        .take(event.capacity || 5000);
+      const eventRequests = await ctx.db
+        .query("eventChangeRequests")
+        .withIndex("by_event", (q) => q.eq("eventId", event._id))
+        .take(50);
 
-    return events.map((event) => {
-      const confirmed = registrations.filter(
-        (registration) => registration.eventId === event._id && registration.status === "confirmed"
-      );
-      const checkedIn = confirmed.filter((registration) => registration.checkedIn);
-      const eventRequests = requests.filter((request) => request.eventId === event._id);
+      const confirmed = regs.filter((r) => r.status === "confirmed");
+      const checkedIn = confirmed.filter((r) => r.checkedIn);
 
-      return {
+      results.push({
         ...event,
         effectiveStatus: computeEffectiveStatus(event),
         totalRegistrations: confirmed.length,
@@ -163,10 +187,11 @@ export const getAllEvents = query({
           event.ticketType === "paid" && event.ticketPrice
             ? checkedIn.length * event.ticketPrice
             : 0,
-        pendingChangeRequests: eventRequests.filter((request) => request.status === "pending").length,
+        pendingChangeRequests: eventRequests.filter((r) => r.status === "pending").length,
         adminCount: (event.eventAdmins || []).length,
-      };
-    });
+      });
+    }
+    return results;
   },
 });
 
@@ -179,22 +204,29 @@ export const getEventWithStats = query({
     const event = await ctx.db.get(args.eventId);
     if (!event) throw new Error("Event not found");
 
+    const isOwner = ["owner", "superadmin"].includes(user.role);
+    const hasPermission = isOwner || event.organizerId === user._id || (event.eventAdmins || []).some(admin => admin.userId === user._id);
+    
+    if (!hasPermission) {
+      throw new Error("Unauthorized: You do not have permission to view this event.");
+    }
+
     const registrations = await ctx.db
       .query("registrations")
       .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
-      .collect();
+      .take(event.capacity || 5000);
 
     const auditLog = await ctx.db
       .query("eventAuditLog")
       .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
       .order("desc")
-      .collect();
+      .take(50);
 
     const changeRequests = await ctx.db
       .query("eventChangeRequests")
       .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
       .order("desc")
-      .collect();
+      .take(50);
 
     const confirmed = registrations.filter((registration) => registration.status === "confirmed");
     const checkedIn = confirmed.filter((registration) => registration.checkedIn);
@@ -609,5 +641,71 @@ export const bulkUpdateEventStatus = mutation({
     }
 
     return { success: true, updated };
+  },
+});
+
+export const updateEventVisuals = mutation({
+  args: {
+    eventId: v.id("events"),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    themeColor: v.optional(v.string()),
+    primaryColor: v.optional(v.string()),
+    secondaryColor: v.optional(v.string()),
+    fontFamily: v.optional(v.string()),
+    layoutVariant: v.optional(v.string()),
+    customCss: v.optional(v.string()),
+    coverImage: v.optional(v.string()),
+    contentSections: v.optional(v.object({
+      heroBlurb: v.optional(v.string()),
+      attendeeNotes: v.optional(v.string()),
+      contactEmail: v.optional(v.string()),
+      whyAttend: v.optional(v.array(v.string())),
+      agenda: v.optional(v.array(v.object({
+        time: v.string(),
+        title: v.string(),
+        description: v.optional(v.string()),
+      }))),
+      faqs: v.optional(v.array(v.object({
+        question: v.string(),
+        answer: v.string(),
+      }))),
+      resources: v.optional(v.array(v.object({
+        label: v.string(),
+        url: v.string(),
+      }))),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAdmin(ctx);
+    if (!user || !["superadmin", "owner"].includes(user.role)) {
+      throw new Error("Unauthorized: Only Superadmin/Owner can use the Creative Studio.");
+    }
+
+    const { eventId, contentSections, ...directUpdates } = args;
+    const event = await ctx.db.get(eventId);
+    if (!event) throw new Error("Event not found");
+
+    const patch = {
+      ...directUpdates,
+      updatedAt: Date.now(),
+    };
+
+    if (contentSections) {
+      patch.contentSections = normalizeContentSections(contentSections);
+    }
+
+    await ctx.db.patch(eventId, patch);
+
+    await ctx.db.insert("eventAuditLog", {
+      eventId,
+      userId: user._id,
+      userName: user.name,
+      action: "creative_studio_edit",
+      reason: "Updated via AI Creative Studio",
+      timestamp: Date.now(),
+    });
+
+    return { success: true };
   },
 });

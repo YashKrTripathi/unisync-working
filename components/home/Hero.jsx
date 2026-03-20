@@ -2,14 +2,24 @@
 
 import React from "react";
 import { SignIn, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useConvexQuery } from "@/hooks/use-convex-query";
+import { api } from "@/convex/_generated/api";
 
-const heroStats = [
-  { value: "45+", label: "Active Clubs" },
-  { value: "200+", label: "Annual Events" },
-  { value: "12k+", label: "Students" },
-];
+const DEFAULT_HERO = {
+  badge: "Official Portal",
+  headingLines: ["D Y Patil", "International", "University"],
+  tagline: "The Pulse of Campus Life. Centralizing event coordination, venue booking, and student engagement in one seamless ecosystem.",
+  stats: [
+    { value: "45+", label: "Active Clubs" },
+    { value: "200+", label: "Annual Events" },
+    { value: "12k+", label: "Students" },
+  ],
+};
 
 export default function Hero() {
+  const { data: cmsContent } = useConvexQuery(api.siteContent.getPageContent, { pageId: "home_hero" });
+  const hero = cmsContent || DEFAULT_HERO;
+
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#0e0d0d]">
       <img
@@ -26,23 +36,21 @@ export default function Hero() {
         <div className="grid w-full items-center gap-12 xl:gap-20 lg:grid-cols-[minmax(0,1fr)_460px]">
           <div className="min-w-0 max-w-[700px]">
             <div className="mb-8 inline-flex items-center rounded-sm bg-[#a24c23] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#ffd1b4]">
-              Official Portal
+              {hero.badge}
             </div>
 
             <h1 className="font-sans text-[clamp(4.3rem,8vw,7.4rem)] font-black uppercase leading-[0.88] tracking-[-0.07em] text-[#ffb18a]">
-              <span className="block text-white">D Y Patil</span>
-              <span className="block">International</span>
-              <span className="block">University</span>
+              {(hero.headingLines || []).map((line, i) => (
+                <span key={i} className={`block ${i === 0 ? "text-white" : ""}`}>{line}</span>
+              ))}
             </h1>
 
             <p className="mt-8 max-w-[620px] text-[clamp(1rem,1.45vw,1.35rem)] leading-[1.75] text-[#f3ba9b]">
-              The Pulse of Campus Life. Centralizing event coordination,
-              venue booking, and student engagement in one seamless
-              ecosystem.
+              {hero.tagline}
             </p>
 
             <div className="mt-12 grid max-w-[620px] grid-cols-3 gap-6 border-t border-white/10 pt-8">
-              {heroStats.map((stat) => (
+              {(hero.stats || []).map((stat) => (
                 <div key={stat.label}>
                   <div className="text-[clamp(1.8rem,3vw,2.5rem)] font-black leading-none text-[#ff9a63]">
                     {stat.value}
@@ -70,12 +78,16 @@ export default function Hero() {
 
                 <SignedIn>
                   <div className="flex min-h-[520px] flex-col items-center justify-center px-6 py-10 text-center">
-                    <div className="mb-6 rounded-full ring-2 ring-white/20">
+                    <div className="mb-6">
                       <UserButton
                         afterSignOutUrl="/"
                         appearance={{
                           elements: {
-                            avatarBox: "w-20 h-20",
+                            userButtonTrigger: "h-20 w-20 rounded-full p-0",
+                            userButtonBox: "h-20 w-20 overflow-hidden rounded-full",
+                            userButtonAvatarBox: "h-20 w-20 overflow-hidden rounded-full",
+                            avatarBox: "h-20 w-20 overflow-hidden rounded-full",
+                            avatarImage: "h-full w-full rounded-full object-cover",
                             userButtonPopoverFooter: "hidden",
                           },
                         }}
@@ -104,3 +116,5 @@ export default function Hero() {
     </section>
   );
 }
+
+

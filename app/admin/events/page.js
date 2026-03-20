@@ -230,9 +230,14 @@ export default function EventsAdminPage() {
                   </div>
                   <p className="mt-2 text-sm text-slate-300">{event.organizerName} · {event.category}</p>
                 </div>
-                <Link href={`/admin/events/${event._id}`} className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15">
-                  Open
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link href={`/admin/events/${event._id}`} className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15">
+                    Open
+                  </Link>
+                  <Link href={`/admin/events/${event._id}/studio`} className="rounded-2xl bg-orange-600/15 border border-orange-500/20 px-4 py-2 text-sm font-medium text-orange-400 transition hover:bg-orange-500/20">
+                    Edit
+                  </Link>
+                </div>
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">

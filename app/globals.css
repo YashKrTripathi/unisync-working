@@ -559,12 +559,166 @@ body.is-not-found main>div:first-of-type canvas {
   opacity: 1;
 }
 
+.events-loader-shell {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.events-loader-shell__glow {
+  position: absolute;
+  inset: auto 10% -40% 10%;
+  height: 180px;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle, rgba(255, 77, 0, 0.2) 0%, rgba(255, 77, 0, 0.04) 45%, transparent 72%);
+  filter: blur(22px);
+  pointer-events: none;
+}
+
+.events-loader-shell .loader {
+  --color: hsl(0, 0%, 87%);
+  --animation: 2s ease-in-out infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+
+.events-loader-shell .loader .circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color);
+  border-radius: 9999px;
+  margin: 0 10px;
+  background-color: transparent;
+  animation: circle-keys var(--animation);
+}
+
+.events-loader-shell .loader .circle .dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background-color: var(--color);
+  transform: translate(-50%, -50%);
+  animation: dot-keys var(--animation);
+}
+
+.events-loader-shell .loader .circle .outline {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  animation: outline-keys var(--animation);
+}
+
+.events-loader-shell .loader .circle:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.events-loader-shell .loader .circle:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.events-loader-shell .loader .circle:nth-child(4) {
+  animation-delay: 0.9s;
+}
+
+.events-loader-shell .loader .circle:nth-child(2) .dot {
+  animation-delay: 0.3s;
+}
+
+.events-loader-shell .loader .circle:nth-child(3) .dot {
+  animation-delay: 0.6s;
+}
+
+.events-loader-shell .loader .circle:nth-child(4) .dot {
+  animation-delay: 0.9s;
+}
+
+.events-loader-shell .loader .circle:nth-child(1) .outline {
+  animation-delay: 0.9s;
+}
+
+.events-loader-shell .loader .circle:nth-child(2) .outline {
+  animation-delay: 1.2s;
+}
+
+.events-loader-shell .loader .circle:nth-child(3) .outline {
+  animation-delay: 1.5s;
+}
+
+.events-loader-shell .loader .circle:nth-child(4) .outline {
+  animation-delay: 1.8s;
+}
+
+@keyframes circle-keys {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes dot-keys {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(0);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes outline-keys {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    outline: solid 20px rgba(255, 255, 255, 0.22);
+    outline-offset: 0;
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    outline: 0 solid transparent;
+    outline-offset: 20px;
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animated-button,
   .animated-button svg,
   .animated-button .circle,
-  .animated-button .text {
+  .animated-button .text,
+  .events-loader-shell .loader .circle,
+  .events-loader-shell .loader .circle .dot,
+  .events-loader-shell .loader .circle .outline {
     transition: none;
+    animation: none;
   }
 }
 

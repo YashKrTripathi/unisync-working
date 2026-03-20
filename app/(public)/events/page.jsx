@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
@@ -102,17 +102,28 @@ function EventCard({ event, variant }) {
   );
 }
 
-function PlaceholderCard({ keyId }) {
+function EventsLoadingState({ title }) {
   return (
-    <div
-      key={keyId}
-      className="animate-pulse rounded-[30px] border border-white/10 bg-gradient-to-b from-white/5 to-black/20 p-6"
-    >
-      <div className="h-12 w-32 rounded-full bg-white/10" />
-      <div className="mt-4 h-6 w-3/4 rounded-full bg-white/10" />
-      <div className="mt-3 h-3 rounded-full bg-white/10" />
-      <div className="mt-2 h-3 rounded-full bg-white/10" />
-      <div className="mt-2 h-3 w-1/2 rounded-full bg-white/10" />
+    <div className="events-loader-shell rounded-[30px] border border-white/10 bg-gradient-to-br from-white/[0.08] via-[#0f0a12] to-black/40 px-6 py-12">
+      <div className="events-loader-shell__glow" />
+      <div className="relative flex flex-col items-center justify-center gap-5 text-center">
+        <div className="loader" aria-hidden="true">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={`events-loader-${title}-${index}`} className="circle">
+              <div className="dot" />
+              <div className="outline" />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-[var(--color-nameless-orange)]">
+            Loading the events
+          </p>
+          <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/60">
+            Preparing the {title.toLowerCase()} cards.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -146,10 +157,10 @@ export default function EventsPage() {
         <div className="absolute -top-16 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[#4f46e5]/30 blur-[110px]" />
         <div className="absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-[#0f172a] via-[#0b0e17] to-transparent" />
         <div className="relative mx-auto max-w-[1400px] px-6 py-12 lg:py-16">
-          <h1 className="text-5xl font-semibold leading-tight text-white md:text-6xl">UniSync Premium Events</h1>
+          <h1 className="text-5xl font-semibold leading-tight text-white md:text-6xl">Curated Event Showcases</h1>
           <p className="mt-3 max-w-3xl text-lg text-white/75">
             Browse the live, upcoming, and premium showcases that define innovation across campus. This curated carousel
-            keeps your focus on whatâ€™s happening now and whatâ€™s next.
+            keeps your focus on what's happening now and what's next.
           </p>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {heroNavigation.map((item) => {
@@ -210,15 +221,15 @@ export default function EventsPage() {
                   Browse all
                 </button>
               </div>
-              <div className="grid gap-6 lg:grid-cols-3">
-                {(loading ? Array.from({ length: 3 }) : events).map((event, index) =>
-                  event ? (
+              {loading ? (
+                <EventsLoadingState title={title} />
+              ) : (
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {events.map((event) => (
                     <EventCard key={event._id} event={event} variant={title} />
-                  ) : (
-                    <PlaceholderCard key={`placeholder-${title}-${index}`} />
-                  )
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </section>
           ));
         })()}

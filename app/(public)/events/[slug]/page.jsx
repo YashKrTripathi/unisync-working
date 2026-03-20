@@ -139,21 +139,33 @@ export default function EventDetailPage() {
     notFound();
   }
 
+  const searchParams = new URL(window.location.href).searchParams;
+  const isPreview = searchParams.get("preview") === "true";
+
   const sections = event.contentSections || {};
-  const accent = event.themeColor || "#f97316";
+  
+  // Visual Overrides (for Creative Studio Preview)
+  const accent = searchParams.get("themeColor") || event.themeColor || "#f97316";
+  const fontFamily = searchParams.get("font") || event.fontFamily || "sans";
+  const layout = searchParams.get("layout") || event.layoutVariant || "modern";
+  
   const isEventFull = event.registrationCount >= event.capacity;
   const isEventPast = event.endDate < currentTime;
   const seatsLeft = Math.max(event.capacity - event.registrationCount, 0);
 
+  const fontClass = fontFamily === "serif" ? "font-serif" : (fontFamily === "mono" ? "font-mono" : "font-sans");
+
   return (
     <div
-      className="relative min-h-screen overflow-hidden bg-[#080607] px-4 pb-20 pt-28 text-white sm:px-6"
+      className={`relative min-h-screen overflow-hidden bg-[#080607] px-4 pb-20 pt-28 text-white sm:px-6 ${fontClass} ${isPreview ? "pointer-events-none" : ""}`}
       style={{
         ["--accent-color"]: accent,
         ["--accent-soft"]: hexToRgba(accent, 0.22),
         ["--accent-faint"]: hexToRgba(accent, 0.08),
       }}
     >
+      {event.customCss && <style>{event.customCss}</style>}
+      {searchParams.get("customCss") && <style>{searchParams.get("customCss")}</style>}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-0 h-[340px] w-[340px] -translate-x-1/2 rounded-full blur-[110px]" style={{ background: "var(--accent-soft)" }} />
         <div className="absolute right-[8%] top-[16%] h-56 w-56 rounded-full bg-white/[0.04] blur-[120px]" />

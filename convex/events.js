@@ -180,7 +180,7 @@ export const getMyEventProposals = query({
       .query("eventProposals")
       .withIndex("by_proposer", (q) => q.eq("proposerId", user._id))
       .order("desc")
-      .collect();
+      .take(100);
   },
 });
 
@@ -227,7 +227,7 @@ export const getMyEvents = query({
     const user = await ctx.runQuery(internal.users.getCurrentUser);
     if (!user) return [];
 
-    const allEvents = await ctx.db.query("events").order("desc").collect();
+    const allEvents = await ctx.db.query("events").order("desc").take(200);
 
     return allEvents
       .filter((event) => event.organizerId === user._id || (event.eventAdmins || []).some((admin) => admin.userId === user._id))

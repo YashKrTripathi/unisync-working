@@ -102,30 +102,32 @@ function AuthAction({ useClerk = false, canManageEvents = false }) {
       ) : null}
 
       <SignedIn>
-        <div className="ml-1 overflow-hidden rounded-full ring-2 ring-white/20 transition-all duration-300 hover:ring-white">
-          <UserButton
-            afterSignOutUrl="/"
-            appearance={{
-              elements: {
-                avatarBox: "h-9 w-9 overflow-hidden rounded-full shrink-0",
-                userButtonPopoverCard: "rounded-2xl border border-white/10 shadow-2xl bg-[#0f0e16]/95 text-white min-w-[280px]",
-                userButtonPopoverHeader: "border-b border-white/10 bg-[#0f0e16]/80",
-                userButtonPopoverActionButton: "hover:bg-white/5",
-                userButtonPopoverActions: "bg-transparent",
-                userButtonPopoverFooter: "hidden",
-                userButtonPopoverText: "text-white",
-              },
-            }}
-          >
-            <UserButton.MenuItems>
-              <UserButton.Link
-                href="/my-tickets"
-                label="My Tickets"
-                labelIcon={<Ticket className="h-4 w-4" />}
-              />
-            </UserButton.MenuItems>
-          </UserButton>
-        </div>
+        <UserButton
+          afterSignOutUrl="/"
+          appearance={{
+            elements: {
+              userButtonTrigger: "ml-1 h-9 w-9 rounded-full p-0 transition-transform duration-300 hover:scale-[1.03]",
+              userButtonBox: "h-9 w-9 overflow-hidden rounded-full",
+              userButtonAvatarBox: "h-9 w-9 overflow-hidden rounded-full",
+              avatarBox: "h-9 w-9 overflow-hidden rounded-full shrink-0",
+              avatarImage: "h-full w-full rounded-full object-cover",
+              userButtonPopoverCard: "rounded-2xl border border-white/10 shadow-2xl bg-[#0f0e16]/95 text-white min-w-[280px]",
+              userButtonPopoverHeader: "border-b border-white/10 bg-[#0f0e16]/80",
+              userButtonPopoverActionButton: "hover:bg-white/5",
+              userButtonPopoverActions: "bg-transparent",
+              userButtonPopoverFooter: "hidden",
+              userButtonPopoverText: "text-white",
+            },
+          }}
+        >
+          <UserButton.MenuItems>
+            <UserButton.Link
+              href="/my-tickets"
+              label="My Tickets"
+              labelIcon={<Ticket className="h-4 w-4" />}
+            />
+          </UserButton.MenuItems>
+        </UserButton>
       </SignedIn>
 
       <SignedOut>
@@ -171,17 +173,19 @@ function MobileMenu({ open, setOpen, useClerk = false, canManageEvents = false }
             <>
               <SignedIn>
                 <div className="flex justify-center">
-                  <div className="overflow-hidden rounded-full ring-2 ring-white/20">
-                    <UserButton
-                      afterSignOutUrl="/"
-                      appearance={{
-                        elements: {
-                          avatarBox: "h-10 w-10 overflow-hidden rounded-full shrink-0",
-                          userButtonPopoverFooter: "hidden",
-                        },
-                      }}
-                    />
-                  </div>
+                  <UserButton
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        userButtonTrigger: "h-10 w-10 rounded-full p-0",
+                        userButtonBox: "h-10 w-10 overflow-hidden rounded-full",
+                        userButtonAvatarBox: "h-10 w-10 overflow-hidden rounded-full",
+                        avatarBox: "h-10 w-10 overflow-hidden rounded-full shrink-0",
+                        avatarImage: "h-full w-full rounded-full object-cover",
+                        userButtonPopoverFooter: "hidden",
+                      },
+                    }}
+                  />
                 </div>
               </SignedIn>
               <SignedOut>

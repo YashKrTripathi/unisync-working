@@ -1,27 +1,26 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 
-// Get featured events (high registration count or recent)
+// Get featured events (high registration count, upcoming)
 export const getFeaturedEvents = query({
   args: {
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    const maxFetch = Math.min((args.limit ?? 3) * 4, 50); // Fetch a small multiple, then sort
+
     const events = await ctx.db
       .query("events")
       .withIndex("by_start_date")
       .filter((q) => q.gte(q.field("startDate"), now))
       .order("desc")
-      .collect();
+      .take(maxFetch);
 
-    // Sort by registration count for featured
-    const featured = events
+    return events
       .filter((e) => !e.status || e.status === "approved" || e.status === "live")
       .sort((a, b) => b.registrationCount - a.registrationCount)
       .slice(0, args.limit ?? 3);
-
-    return featured;
   },
 });
 
@@ -34,14 +33,14 @@ export const getEventsByLocation = query({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    const maxFetch = Math.min((args.limit ?? 4) * 6, 60);
 
     let events = await ctx.db
       .query("events")
       .withIndex("by_start_date")
       .filter((q) => q.gte(q.field("startDate"), now))
-      .collect();
+      .take(maxFetch);
 
-    // Filter by city or state
     if (args.city) {
       events = events.filter(
         (e) => e.city.toLowerCase() === args.city.toLowerCase()
@@ -52,10 +51,9 @@ export const getEventsByLocation = query({
       );
     }
 
-    // Only show approved/live events
-    events = events.filter((e) => !e.status || e.status === "approved" || e.status === "live");
-
-    return events.slice(0, args.limit ?? 4);
+    return events
+      .filter((e) => !e.status || e.status === "approved" || e.status === "live")
+      .slice(0, args.limit ?? 4);
   },
 });
 
@@ -66,19 +64,19 @@ export const getPopularEvents = query({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    const maxFetch = Math.min((args.limit ?? 6) * 4, 50);
+
     const events = await ctx.db
       .query("events")
       .withIndex("by_start_date")
       .filter((q) => q.gte(q.field("startDate"), now))
-      .collect();
+      .order("desc")
+      .take(maxFetch);
 
-    // Sort by registration count
-    const popular = events
+    return events
       .filter((e) => !e.status || e.status === "approved" || e.status === "live")
       .sort((a, b) => b.registrationCount - a.registrationCount)
       .slice(0, args.limit ?? 6);
-
-    return popular;
   },
 });
 
@@ -90,16 +88,17 @@ export const getEventsByCategory = query({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    const maxFetch = Math.min((args.limit ?? 12) * 2, 50);
+
     const events = await ctx.db
       .query("events")
       .withIndex("by_category", (q) => q.eq("category", args.category))
       .filter((q) => q.gte(q.field("startDate"), now))
-      .collect();
+      .take(maxFetch);
 
-    // Only show approved/live events
-    const filtered = events.filter((e) => !e.status || e.status === "approved" || e.status === "live");
-
-    return filtered.slice(0, args.limit ?? 12);
+    return events
+      .filter((e) => !e.status || e.status === "approved" || e.status === "live")
+      .slice(0, args.limit ?? 12);
   },
 });
 
@@ -111,13 +110,14 @@ export const getCategoryCounts = query({
       .query("events")
       .withIndex("by_start_date")
       .filter((q) => q.gte(q.field("startDate"), now))
-      .collect();
+      .take(200); // Reasonable cap
 
-    // Count events by category
     const counts = {};
-    events.forEach((event) => {
-      counts[event.category] = (counts[event.category] || 0) + 1;
-    });
+    for (const event of events) {
+      if (!event.status || event.status === "approved" || event.status === "live") {
+        counts[event.category] = (counts[event.category] || 0) + 1;
+      }
+    }
 
     return counts;
   },
@@ -130,35 +130,41 @@ export const getPastEvents = query({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    const limit = args.limit ?? 12;
+
     const events = await ctx.db
       .query("events")
       .withIndex("by_start_date")
       .order("desc")
-      .collect();
+      .take(limit * 3); // Fetch extra to account for filtering
 
     const pastEvents = events.filter((event) => {
       const status = event.status || "approved";
       const isVisibleStatus =
         status === "approved" || status === "live" || status === "completed";
       return isVisibleStatus && event.endDate < now;
-    });
+    }).slice(0, limit);
 
-    const sliced = pastEvents.slice(0, args.limit ?? 100);
-    const ids = new Set(sliced.map((e) => e._id));
-    const registrations = await ctx.db.query("registrations").collect();
+    // Instead of collecting ALL registrations, query per event (much faster for small result sets)
+    const results = [];
+    for (const event of pastEvents) {
+      const checkedInCount = (await ctx.db
+        .query("registrations")
+        .withIndex("by_event", (q) => q.eq("eventId", event._id))
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("status"), "confirmed"),
+            q.eq(q.field("checkedIn"), true)
+          )
+        )
+        .take(event.capacity || 10000)).length;
 
-    const attendanceByEvent = {};
-    for (const registration of registrations) {
-      if (!ids.has(registration.eventId)) continue;
-      if (registration.status !== "confirmed") continue;
-      if (!registration.checkedIn) continue;
-      attendanceByEvent[registration.eventId] =
-        (attendanceByEvent[registration.eventId] || 0) + 1;
+      results.push({
+        ...event,
+        attendeeCount: checkedInCount,
+      });
     }
 
-    return sliced.map((event) => ({
-      ...event,
-      attendeeCount: attendanceByEvent[event._id] || 0,
-    }));
+    return results;
   },
 });
