@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable react-hooks/incompatible-library */
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -166,7 +166,7 @@ function StageCard({ number, title, text, active }) {
   );
 }
 
-export default function EventWorkflowPage() {
+function EventWorkflowPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const proposalId = searchParams.get("proposalId");
@@ -896,5 +896,27 @@ export default function EventWorkflowPage() {
 
       <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} trigger={upgradeReason} />
     </div>
+  );
+}
+
+function EventWorkflowPageFallback() {
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_32%),linear-gradient(135deg,_#0f172a_0%,_#111827_44%,_#1e3a8a_100%)] px-4 py-8 text-white sm:px-6">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20" />
+      <div className="relative mx-auto flex min-h-[70vh] max-w-7xl items-center justify-center">
+        <div className="rounded-[28px] border border-white/15 bg-white/8 px-8 py-6 text-center backdrop-blur-xl">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-200" />
+          <p className="mt-4 text-sm text-slate-200">Preparing the event workflow...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function EventWorkflowPage() {
+  return (
+    <Suspense fallback={<EventWorkflowPageFallback />}>
+      <EventWorkflowPageContent />
+    </Suspense>
   );
 }
